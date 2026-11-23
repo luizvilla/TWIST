@@ -17,7 +17,10 @@ Needs pyserial, pyvisa, pyvisa-py, numpy: run it with the Core2 venv (~/code/Cor
   bench_ctl.py --port P wait-trip [--timeout S] [--session DIR] [--name NAME]
   bench_ctl.py --port P fwscope-arm              arm the firmware scope (triggers on Mode/wStep/trip)
   bench_ctl.py --port P fwscope-read --session DIR --name NAME
-  bench_ctl.py mso-arm                           MSO54 single acquisition
+  bench_ctl.py mso-check                         empty the MSO54 output queue and check it answers in step
+  bench_ctl.py mso-arm --session DIR --preset ov|stp [--auto | --source vhigh|il --level V] [--hscale s] [--hpos %]
+                                                 set the channels (roles from session.env), the edge trigger, arm single
+  bench_ctl.py mso-wait [--timeout S]            wait until the single acquisition has triggered and stopped
   bench_ctl.py mso-capture --session DIR --name NAME   screen, measurements, waveforms
   bench_ctl.py predictions                       the D-L2P predictions from the newest campaign
   bench_ctl.py record --session DIR              write sim.log, summary.json, report.html; refresh the control center
@@ -193,16 +196,124 @@ def cmd_fwscope_read(a) -> None:
 
 
 # ---------------------------------------------------------------- MSO54
-def cmd_mso_arm(a) -> None:
+# The MSO54 is used in single-sequence mode only: set up, armed on an edge, read once it has triggered and
+# stopped. Stopping a running acquisition and querying right after made the scope refuse USB writes
+# (session 2026-11-23_170833), and one stale reply in its output queue shifts every later answer.
+TEK_RESOURCE = 'USB0::1689::1314::C017217::0::INSTR'
+
+PRESETS = {  # role: (scale per div, centre offset), plus the timebase
+    'ov':  {'vhigh': (5.0, 37.0), 'vlow': (5.0, 12.0), 'il': (0.2, 1.0), 'ibleed': (0.1, 0.35), 'hscale': 0.05, 'hpos': 30.0},
+    'stp': {'vhigh': (2.0, 30.0), 'vlow': (2.0, 13.0), 'il': (0.1, 1.3), 'ibleed': (0.05, 0.30), 'hscale': 2e-4, 'hpos': 20.0},
+}
+
+
+def roles(session: str | None) -> dict:
+    env = parse_env(Path(session) / 'session.env') if session else {}
+    r = {'vhigh': env.get('CH_VHIGH', 'CH4'), 'vlow': env.get('CH_VLOW', 'CH1'), 'il': env.get('IL_CHANNEL', 'CH2'),
+         'ibleed': env.get('CH_IBLEED', 'CH3')}
+    return {k: v for k, v in r.items() if v and v != 'none'}
+
+
+def tek_open(resource: str | None):
+    """@brief Open the MSO54, empty its output queue, and check it answers *IDN? in step. @return the Core2 Scope."""
     import scope as tek  # Core2 tests/common/scope.py
-    tek.Scope(a.resource).arm_single()
-    print('MSO54 armed (single)')
+    from pyvisa.errors import VisaIOError
+    idn = None
+    for attempt in range(2):
+        try:
+            sc = tek.Scope(resource or TEK_RESOURCE, timeout_s=10)
+            for _ in range(3):
+                sc.drain()
+                idn = sc.q('*IDN?', timeout_s=3)
+                if idn and idn.upper().startswith('TEKTRONIX'):
+                    return sc
+        except Exception as ex:  # pyvisa-py raises ValueError on a USB write timeout
+            idn = f'{type(ex).__name__}: {ex}'
+        if attempt == 0:
+            # pyvisa-py has no USBTMC device clear: a USB reset (same as a replug) unwedges the link
+            print(f'MSO54 not answering in step ({idn!r}): resetting its USB link', file=sys.stderr)
+            try:
+                import usb.core
+                dev = usb.core.find(idVendor=0x0699, idProduct=0x0522)
+                if dev is not None:
+                    try:
+                        dev.reset()
+                    except Exception:
+                        pass  # the device re-enumerates during the reset: "Entity not found" is expected
+            except Exception as ex:
+                print(f'USB reset failed: {ex}', file=sys.stderr)
+            time.sleep(4)
+    raise SystemExit(f'MSO54 does not answer *IDN? in step (last answer: {idn!r}); unplug and replug its USB cable')
+
+
+def scope_errors(sc) -> str:
+    ev = sc.q('ALLEv?', timeout_s=3) or ''
+    return '' if ev.startswith('0,') or 'No events' in ev else ev
+
+
+def cmd_mso_check(a) -> None:
+    sc = tek_open(a.resource)
+    print(sc.q('*IDN?'), '| acquisition', 'running' if sc.running() else 'stopped', '| trigger', sc.q('TRIGger:A:MODe?'))
+
+
+def cmd_mso_arm(a) -> None:
+    sc = tek_open(a.resource)
+    p = PRESETS[a.preset]
+    r = roles(a.session)
+    sc.inst.write('ACQuire:STATE STOP')
+    sc.q('*OPC?', timeout_s=10)
+    for role, ch in r.items():
+        scale, offset = p[role]
+        sc.inst.write(f'DISplay:GLObal:{ch}:STATE ON')
+        sc.inst.write(f'{ch}:POSition 0')
+        sc.inst.write(f'{ch}:SCAle {scale}')
+        sc.inst.write(f'{ch}:OFFSet {offset}')
+    sc.inst.write('HORizontal:MODe AUTO')
+    sc.inst.write(f'HORizontal:SCAle {a.hscale if a.hscale else p["hscale"]}')
+    sc.inst.write(f'HORizontal:POSition {a.hpos if a.hpos is not None else p["hpos"]}')
+    sc.inst.write('HORizontal:RECOrdlength 125000')
+    sc.inst.write('HORizontal:MODe:RECOrdlength 125000')  # the form the MSO5 series takes in AUTO mode
+    if a.auto:
+        sc.inst.write('TRIGger:A:MODe AUTO')
+    else:
+        src = r[a.source]
+        sc.inst.write('TRIGger:A:TYPe EDGE')
+        sc.inst.write(f'TRIGger:A:EDGE:SOUrce {src}')
+        sc.inst.write(f'TRIGger:A:EDGE:SLOpe {a.slope}')
+        sc.inst.write(f'TRIGger:A:LEVel:{src} {a.level}')
+        sc.inst.write('TRIGger:A:MODe NORMal')
+    sc.q('*OPC?', timeout_s=10)
+    err = scope_errors(sc)
+    sc.arm_single()
+    time.sleep(0.3)
+    state = sc.q('TRIGger:STATE?', timeout_s=3)
+    what = 'auto trigger' if a.auto else f'{a.source} ({r[a.source]}) {a.slope} at {a.level}'
+    print(f'MSO54 armed, single sequence, {what}; {sc.num("HORizontal:SCAle?")} s/div, '
+          f'{sc.num("HORizontal:RECOrdlength?")} points; trigger state {state}' + (f'; scope errors: {err}' if err else ''))
+
+
+def cmd_mso_wait(a) -> None:
+    sc = tek_open(a.resource)
+    t0 = time.time()
+    while time.time() - t0 < a.timeout:
+        if sc.q('ACQuire:STATE?', timeout_s=3) in ('0', 'OFF', 'STOP'):
+            print(f'MSO54 triggered and stopped after {time.time() - t0:.1f} s')
+            return
+        time.sleep(0.2)
+    print(f'MSO54 did not trigger within {a.timeout:g} s (trigger state {sc.q("TRIGger:STATE?", timeout_s=3)})')
+    raise SystemExit(2)
 
 
 def cmd_mso_capture(a) -> None:
     import scope as tek
     out = Path(a.session) / 'scope' / a.name
-    tek.capture(tek.Scope(a.resource), out, label=a.name, waveforms=True)
+    try:
+        sc = tek_open(a.resource)
+        if sc.running():
+            print('warning: the scope is still running (it did not trigger): capturing what it holds now')
+        tek.capture(sc, out, label=a.name, waveforms=True)
+    except Exception as ex:  # a USB timeout from pyvisa-py is a ValueError, not a VisaIOError
+        raise SystemExit(f'MSO54 capture failed: {type(ex).__name__}: {ex}')
     print(out)
 
 
@@ -458,7 +569,12 @@ def main() -> None:
     sub.add_parser('fwscope-arm')
     s = sub.add_parser('fwscope-read'); s.add_argument('--session', required=True); s.add_argument('--name', required=True)
     s.add_argument('--timeout', type=float, default=5.0)
-    sub.add_parser('mso-arm')
+    sub.add_parser('mso-check')
+    s = sub.add_parser('mso-arm'); s.add_argument('--session'); s.add_argument('--preset', choices=list(PRESETS), default='ov')
+    s.add_argument('--auto', action='store_true'); s.add_argument('--source', choices=['vhigh', 'vlow', 'il', 'ibleed'], default='vhigh')
+    s.add_argument('--level', type=float, default=0.0); s.add_argument('--slope', default='RISe')
+    s.add_argument('--hscale', type=float); s.add_argument('--hpos', type=float)
+    s = sub.add_parser('mso-wait'); s.add_argument('--timeout', type=float, default=10.0)
     s = sub.add_parser('mso-capture'); s.add_argument('--session', required=True); s.add_argument('--name', required=True)
     sub.add_parser('predictions')
     s = sub.add_parser('record'); s.add_argument('--session', required=True)
@@ -483,7 +599,7 @@ def main() -> None:
         put(shell(a.port), a.path, a.value); print(f'{a.path} = {a.value}')
     else:
         {'settle': cmd_settle, 'wait-trip': cmd_wait_trip, 'fwscope-arm': cmd_fwscope_arm, 'fwscope-read': cmd_fwscope_read,
-         'mso-arm': cmd_mso_arm, 'mso-capture': cmd_mso_capture, 'predictions': cmd_predictions, 'record': cmd_record}[a.cmd](a)
+         'mso-check': cmd_mso_check, 'mso-arm': cmd_mso_arm, 'mso-wait': cmd_mso_wait, 'mso-capture': cmd_mso_capture, 'predictions': cmd_predictions, 'record': cmd_record}[a.cmd](a)
 
 
 if __name__ == '__main__':

@@ -354,9 +354,15 @@ step "$CH_VHIGH (VHigh): 5 V/div, offset 32 V. $CH_VLOW (LOW1): 5 V/div, offset 
 step "$IL_CHANNEL (TP203): 200 mV/div, offset 1.0 V, DC coupling."
 [[ "$CH_IBLEED" != "none" ]] && step "$CH_IBLEED (bleed current): degauss and zero the probe, 100 mA/div, DC coupling. Expect 0.31 A at 31 V, 0.45 A at 45 V."
 step "Horizontal 200 ms/div, acquisition Hi Res, scope in RUN."
-pause "Scope set? Press Enter to test the USB link with a capture"
-"$PY" "$CTL" mso-capture --session "$SESSION" --name scope_check \
-  || { USE_MSO=no; write_env USE_MSO no; warn "MSO54 did not answer: going on with the firmware scope only"; }
+note "The wizard sets the scales, the timebase and the edge trigger of each test itself, and arms single sequences."
+pause "Probes connected? Press Enter to check the USB link"
+if ! "$PY" "$CTL" mso-check; then
+  warn "The MSO54 does not answer over USB, even after a USB reset. Unplug and replug its USB cable."
+  if confirm "Retry the check?" && "$PY" "$CTL" mso-check; then :; else
+    confirm "Go on with the firmware scope only (L2-STP-01 will be INFO only)?" || exit 1
+    USE_MSO=no; write_env USE_MSO no
+  fi
+fi
 fi
 [[ "$USE_MSO" == "yes" ]] || SKIPPED+=("MSO54 captures: this session used the firmware scope only; redo L2-STP-01 with the MSO54")
 
@@ -398,8 +404,16 @@ ctl set Converter/wV1LowLimit_V 20
 ctl set Converter/wClear 1
 ctl set Converter/wCurrentRef_A -0.2
 confirm "Start CURRENT mode at -0.2 A (power from LOW1 into VHigh)?" || { idle; exit 1; }
+ctl fwscope-arm >/dev/null
 ctl set Converter/Mode 1
 ctl settle direction_check --seconds 1.5 --session "$SESSION"
+if ctl read | grep -q '"rTripped": true'; then
+  idle
+  ctl fwscope-read --session "$SESSION" --name direction_check || true
+  warn "The bench guard stopped the leg during the direction check: see Converter/rTripReason above."
+  warn "The start-up is recorded in $SESSION/fwscope/direction_check.json. Stopped: do not go on until it is understood."
+  exit 1
+fi
 say "I1_LOW should read about -0.2 A, and the low-side supply should show it is delivering current"
 say "(about 0.1 to 0.2 A). If instead LOW1 rises or the supply shows nothing, the current sign is reversed."
 if ! confirm "Low-side supply delivering current, and I1_LOW about -0.2 A?"; then
@@ -417,6 +431,8 @@ for I in 0.50 1.00 1.25 1.50; do
   ctl settle "ov01_${I}A" --seconds 2.5 --session "$SESSION"
   if ctl read | grep -q '"rTripped": true'; then warn "guard tripped at $I A: see Converter/rTripReason"; break; fi
 done
+mso mso-arm --session "$SESSION" --preset ov --auto
+mso mso-wait --timeout 15
 mso mso-capture --session "$SESSION" --name ov01_1.50A
 ctl set Converter/wCurrentRef_A 0 >/dev/null
 sleep 1
@@ -427,19 +443,18 @@ say "VHigh above 32 V from 1.0 A is F-1 on the board: the supply cannot take the
 stage "L2-OV-02: the guard stops the leg at 45 V"
 say "2.0 A would settle VHigh at about 48.7 V. The guard must open the leg at 45 V,"
 say "then the bleed brings VHigh back to 32 V."
-scope_step "MSO54: trigger $CH_VHIGH (VHigh) rising edge at 43 V, normal mode, single sequence; horizontal 200 ms/div."
-[[ "$USE_MSO" == "yes" ]] && pause "Scope set? Press Enter"
 ctl set Converter/wClear 1 >/dev/null
 ctl set Converter/wCurrentRef_A -1.25 >/dev/null
 confirm "Start at 1.25 A, then step to 2.0 A until the guard stops the leg?" || { idle; exit 1; }
 ctl set Converter/Mode 1 >/dev/null
 sleep 2
 ctl fwscope-arm
-mso mso-arm
+mso mso-arm --session "$SESSION" --preset ov --source vhigh --level 43 --hscale 0.05 --hpos 30
 ctl set Converter/wCurrentRef_A -2.0 >/dev/null
 ctl wait-trip --timeout 5 --session "$SESSION" --name ov02_trip || { idle; warn "no trip within 5 s: stopped by hand"; }
 ctl settle ov02_after --seconds 2 --session "$SESSION"
 ctl fwscope-read --session "$SESSION" --name ov02 || warn "firmware scope not read"
+mso mso-wait --timeout 5
 mso mso-capture --session "$SESSION" --name ov02
 ctl set Converter/wCurrentRef_A 0 >/dev/null
 ctl set Converter/wClear 1 >/dev/null
@@ -453,7 +468,6 @@ step "Wait until VHigh and LOW1 read below 5 V on a meter. LOW1 has no bleed: di
 step "Disconnect the low-side supply from LOW1."
 step "Connect a 10 ohm / 50 W or more load across LOW1 and GND."
 step "Set the VHigh supply to 30.0 V, current limit 2.0 A, output still OFF. Keep the bleed resistor and the diode."
-scope_step "MSO54: $IL_CHANNEL (TP203) 100 mV/div, offset 1.1 V; trigger $IL_CHANNEL rising at 1.35 V (3.5 A), single sequence; horizontal 200 us/div; $CH_VHIGH 2 V/div, offset 29 V."
 ask R_LOAD_OHM "Measured LOW1 load resistor (ohm):"
 write_env R_LOAD_OHM "$R_LOAD_OHM"
 pause "Rewired, outputs OFF? Press Enter"
@@ -473,10 +487,11 @@ confirm "Start STEP mode at duty 0.4 (LOW1 about 12 V into 10 ohm)?" || { idle; 
 ctl set Converter/Mode 2 >/dev/null
 ctl settle stp_before --seconds 1.5 --session "$SESSION"
 ctl fwscope-arm
-mso mso-arm
+mso mso-arm --session "$SESSION" --preset stp --source il --level 1.35
 confirm "Step the duty to 0.5 (expected peak about 5.2 A)?" || { idle; exit 1; }
 ctl set Converter/wStep 1 >/dev/null
 sleep 1
+mso mso-wait --timeout 3
 mso mso-capture --session "$SESSION" --name stp01
 ctl fwscope-read --session "$SESSION" --name stp01 || warn "firmware scope not read"
 ctl settle stp_after --seconds 1 --session "$SESSION"
