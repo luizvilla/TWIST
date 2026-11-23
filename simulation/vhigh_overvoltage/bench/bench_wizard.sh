@@ -277,12 +277,24 @@ stage "Flash and find the board"
 warn "Every power supply OFF. Only the Spin's USB cable is connected."
 step "Plug the Spin USB cable into this computer."
 pause "Supplies off and USB connected? Press Enter"
-(cd "$CORE_DIR" && run "$PIO" run -e USB -t upload) || { warn "upload failed: flash it the usual way (OwnTech upload button), then re-run"; exit 1; }
-say "Waiting for the board to restart..."
-sleep 5
-FOUND="$("$PY" "$CTL" find 2>/dev/null || true)"
-[[ -n "$FOUND" ]] && note "bench firmware answers on $FOUND"
-ask TS_PORT "ThingSet port [${FOUND:-/dev/ttyACM1}]:"; TS_PORT="${TS_PORT:-${FOUND:-/dev/ttyACM1}}"
+if confirm "Flash the bench firmware now? (No: the board already runs it)"; then
+  note "If several boards are listed, pick the TWIST under test by its serial number."
+  (cd "$CORE_DIR" && run "$PIO" run -e USB -t upload) || { warn "upload failed: flash it the usual way (OwnTech upload button), then re-run"; exit 1; }
+  step "Unplug the board's USB cable and plug it back in: after a flash its ports may not answer until then."
+  pause "Replugged? Press Enter"
+fi
+say "Waiting for the board to start (1.5 s boot delay)..."
+sleep 4
+"$PY" "$CTL" list
+FOUND="$("$PY" "$CTL" find || true)"
+if [[ -n "$FOUND" ]]; then
+  note "bench firmware answers on $FOUND"
+else
+  warn "no board answers with the bench firmware. The ThingSet port is the board's -if02 line above."
+  warn "If its port hangs, the firmware is stuck: unplug and replug the board's USB and watch its console (-if00)."
+fi
+ask TS_PORT "ThingSet port${FOUND:+ [$FOUND]}:"; TS_PORT="${TS_PORT:-$FOUND}"
+[[ -n "$TS_PORT" ]] || { warn "no port given"; exit 1; }
 write_env TS_PORT "$TS_PORT"
 ctl identity || { warn "no answer on $TS_PORT"; exit 1; }
 trap 'printf "\n"; idle; exit 130' INT
@@ -320,6 +332,18 @@ step "Low-side supply output ON (24 V). It should deliver almost nothing."
 pause "Both supplies ON? Press Enter to read the board's sensors"
 ctl settle sensor_check --seconds 1 --session "$SESSION"
 say "Now read the voltages at the board terminals with a multimeter, or from the supply displays."
+if ! "$PY" - "$SESSION/steps/sensor_check.json" <<'EOF'
+import json, sys
+m = json.load(open(sys.argv[1]))['mean']
+i = m['rI1Low_A']
+print(f'    I1_LOW with the PWM off: {i:+.3f} A')
+sys.exit(0 if abs(i) <= 0.1 else 1)
+EOF
+then
+  warn "I1_LOW is not about 0 A with no current flowing: the current sensor offset is not calibrated."
+  warn "The current loop would act on a wrong current. Calibrate I1_LOW (OwnTech data API calibration) and re-run."
+  confirm "Continue anyway (not recommended)?" || exit 1
+fi
 ask VHIGH_PSU_V "VHigh at the terminals (V):"
 ask VLOW_PSU_V "LOW1 at the terminals (V):"
 write_env VHIGH_PSU_V "$VHIGH_PSU_V"

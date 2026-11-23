@@ -53,7 +53,7 @@ CONV = ['Mode', 'wCurrentRef_A', 'rCurrentApplied_A', 'wDuty0', 'wDuty1', 'wStep
 def shell(port: str):
     import serial  # type: ignore
     from thingset import ThingSetShell  # Core2 tests/common/spoc/thingset.py
-    ser = serial.Serial(port, 115200, timeout=0.2)
+    ser = serial.Serial(port, 115200, timeout=0.2, write_timeout=2)  # a board that stops reading must not block us
     ts = ThingSetShell(ser)
     if not ts.enter_thingset():
         raise SystemExit(f'{port}: no ThingSet shell answered')
@@ -65,6 +65,8 @@ def get(ts, path: str):
     if not ok or (isinstance(v, str) and 'Invalid' in v):  # the shell answers errors as a quoted string
         raise SystemExit(f'ThingSet read failed: {path} ({v})')
     from thingset import parse_scalar
+    if isinstance(v, str) and len(v) >= 2 and v[0] == v[-1] == '"':
+        return v[1:-1]  # ThingSet strings come back quoted
     return parse_scalar(v) if isinstance(v, str) else v
 
 
@@ -83,7 +85,8 @@ def read_all(ts) -> dict:
 def ports() -> list[str]:
     """@brief OwnTech USB serial ports only (never an ST-Link or another device), from /dev/serial/by-id."""
     found = []
-    for link in sorted(glob.glob('/dev/serial/by-id/usb-OwnTech*-if02')):  # ThingSet shell: the second USB serial port
+    links = glob.glob('/dev/serial/by-id/usb-OwnTech*-if02')  # ThingSet shell: the second USB serial port
+    for link in sorted(links, key=lambda l: ('TWIST' not in l, l)):  # TWIST boards first
         found.append(str(Path(link).resolve()))
     return found or sorted(glob.glob('/dev/ttyACM*'))
 
@@ -95,17 +98,27 @@ def cmd_list(_a) -> None:
         print(f'{Path(link).resolve()}  {name}')
 
 
+def probe(port: str) -> None:
+    """@brief Exit 0 if `port` runs the bench firmware (answers Converter/wOvLimit_V with a number)."""
+    ts = shell(port)
+    ok, v = ts.get_value('Converter/wOvLimit_V')
+    ts.ser.close()
+    float(v)  # the bench firmware answers a number; another firmware answers "Invalid endpoint"
+
+
 def cmd_find(_a) -> None:
+    import subprocess
     for port in ports():
+        # Each port in its own process with a time limit: opening the port of a hung board blocks in the kernel.
         try:
-            ts = shell(port)
-            ok, v = ts.get_value('Converter/wOvLimit_V')
-            ts.ser.close()
-            float(v)  # the bench firmware answers a number; another firmware answers "Invalid endpoint"
+            r = subprocess.run([sys.executable, __file__, 'probe', port], capture_output=True, timeout=8)
+        except subprocess.TimeoutExpired:
+            print(f'{port}: no answer within 8 s (board hung or busy)', file=sys.stderr)
+            continue
+        if r.returncode == 0:
             print(port)
             return
-        except (SystemExit, Exception):
-            continue
+        print(f'{port}: not the bench firmware', file=sys.stderr)
     raise SystemExit('no port with the vhigh_investigation firmware (Converter/wOvLimit_V) found')
 
 
@@ -367,6 +380,7 @@ def main() -> None:
     ap.add_argument('--resource', help='MSO54 VISA resource (default: first Tektronix on USB)')
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('find')
+    s = sub.add_parser('probe'); s.add_argument('probe_port')
     sub.add_parser('list')
     sub.add_parser('identity')
     sub.add_parser('read')
@@ -386,6 +400,11 @@ def main() -> None:
         return cmd_find(a)
     if a.cmd == 'list':
         return cmd_list(a)
+    if a.cmd == 'probe':
+        try:
+            return probe(a.probe_port)
+        except BaseException:
+            raise SystemExit(1)
     if a.cmd in ('identity', 'read', 'set', 'settle', 'wait-trip', 'fwscope-arm', 'fwscope-read') and not a.port:
         raise SystemExit('--port is required (bench_ctl.py find prints it)')
     if a.cmd == 'identity':
