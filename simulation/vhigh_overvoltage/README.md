@@ -121,6 +121,7 @@ All three run in one session through [`bench/bench_wizard.sh`](bench/bench_wizar
 - **Firmware:** `~/code/examples`, branch `vhigh-investigation`, `TWIST/DC_DC/vhigh_investigation/`, built with Core `main`. The Core2 safety API is not used because it is still experimental.
 - **Bench guard:** the firmware opens the leg at 45 V, 2.5 A, or LOW1 above 20 V. It checks every 100 µs and stays latched.
 - **Bleed resistor:** a 100 Ω resistor across VHigh makes every overvoltage test limit itself.
+- **Supply diode:** a Schottky in series with the VHigh supply keeps the rising VHigh off the supply's output; the set point at the board is one diode drop lower.
 - **Voltages:** 32 V on VHigh and 12 V on LOW1, the supplies available (first planned at 60 V and 24 V).
 
 Each result is compared with a model prediction of the exact bench setup (cases D-L2P-01..06):

@@ -314,8 +314,12 @@ idle
 
 # ── 4 ─────────────────────────────────────────────────────────────────────
 stage "Wiring for L2-OV-01 and L2-OV-02 (all supplies OFF)"
-step "VHigh supply: set 32.0 V, current limit 1.0 A, output OFF; + on VHigh, - on GND."
-step "Bleed resistor 100 ohm / 30 W or more across VHigh and GND, on a heat-safe surface (it dissipates up to about 20 W)."
+step "VHigh supply: set 32.0 V, current limit 1.0 A, output OFF; - on GND."
+step "Series diode on the VHigh supply: Schottky, 40 V / 3 A or more; anode on the supply +, cathode on the board VHigh."
+note "The diode keeps VHigh (up to 45 V in this session) off the supply's output, and isolates the board from a crowbar OVP."
+ask HV_DIODE "Diode part number:"
+write_env HV_DIODE "$HV_DIODE"
+step "Bleed resistor 100 ohm / 30 W or more across VHigh and GND on the board side of the diode, on a heat-safe surface (up to about 20 W)."
 step "Low-side supply: set 12.0 V, current limit 3.0 A, output OFF; + on LOW1, - on GND."
 step "Nothing on LOW2. Leg 2 stays off in this firmware."
 step "Measure the bleed resistor with a multimeter, out of circuit or with everything off."
@@ -363,7 +367,8 @@ then
   warn "The current loop would act on a wrong current. Calibrate I1_LOW (OwnTech data API calibration) and re-run."
   confirm "Continue anyway (not recommended)?" || exit 1
 fi
-ask VHIGH_PSU_V "VHigh at the terminals (V):"
+note "Measure VHigh on the board side of the diode: about 0.4 V below the supply set point."
+ask VHIGH_PSU_V "VHigh at the board terminals, after the diode (V):"
 ask VLOW_PSU_V "LOW1 at the terminals (V):"
 write_env VHIGH_PSU_V "$VHIGH_PSU_V"
 write_env VLOW_PSU_V "$VLOW_PSU_V"
@@ -432,7 +437,7 @@ ctl settle discharge --seconds 2 --session "$SESSION" || true
 step "Wait until VHigh and LOW1 read below 5 V on a meter. LOW1 has no bleed: discharge it through a 10 ohm resistor if needed."
 step "Disconnect the low-side supply from LOW1."
 step "Connect a 10 ohm / 50 W or more load across LOW1 and GND."
-step "Set the VHigh supply to 30.0 V, current limit 2.0 A, output still OFF. Keep the bleed resistor."
+step "Set the VHigh supply to 30.0 V, current limit 2.0 A, output still OFF. Keep the bleed resistor and the diode."
 scope_step "MSO54: CH3 1 A/div, trigger CH3 rising at 3.5 A, single sequence; horizontal 200 us/div; CH1 5 V/div, offset 30 V."
 ask R_LOAD_OHM "Measured LOW1 load resistor (ohm):"
 write_env R_LOAD_OHM "$R_LOAD_OHM"

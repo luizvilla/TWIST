@@ -38,11 +38,17 @@ The guard protects the test. It is not the fix: at 100 us it is far too slow for
 
 | Test | VHigh | LOW1 | Other | Expected (model) |
 |---|---|---|---|---|
-| L2-OV-01 | Lab supply 32 V, 1 A limit, plus a 100 ohm / 30 W bleed | Lab supply 12 V, 3 A limit | MSO54 CH1 VHigh, CH2 LOW1, CH3 iL, CH4 SW | VHigh settles at 32.0 / 34.5 / 38.6 / 42.2 V for 0.5 / 1.0 / 1.25 / 1.5 A into VHigh |
+| L2-OV-01 | Lab supply 32 V, 1 A limit, through a series Schottky diode, plus a 100 ohm / 30 W bleed on the board side | Lab supply 12 V, 3 A limit | MSO54 CH1 VHigh, CH2 LOW1, CH3 iL, CH4 SW | VHigh settles at 32.0 / 34.5 / 38.6 / 42.2 V for 0.5 / 1.0 / 1.25 / 1.5 A into VHigh |
 | L2-OV-02 | Same | Same | MSO54 triggered at 43 V | 2.0 A would settle at about 48.7 V: the guard opens the leg at 45 V, and the bleed brings VHigh back to 32 V |
 | L2-STP-01 | Lab supply 30 V, plus the bleed | 10 ohm / 50 W load, no supply | MSO54 CH3 trigger at 3.5 A, 200 us/div | Duty step 0.4 → 0.5: iL peaks at about 5.2 A |
 
 Why a bleed resistor: a lab supply cannot sink current, so the energy pushed into VHigh has to go somewhere. Through the resistor, VHigh settles at about the square root of P·R instead of running away, so the test limits itself even if the guard failed. It is also what discharges VHigh after the test. Keep it connected at all times.
+
+Why a diode in series with the VHigh supply (anode on the supply, cathode on the board; Schottky, 40 V / 3 A or more):
+- VHigh is meant to rise above the set point, up to 45 V. The diode keeps that voltage off the supply's output, which may be rated for only 30 to 32 V.
+- If the supply has a crowbar over-voltage protection, its short cannot reach the board's charged VHigh capacitors.
+- The test is unchanged, because a lab supply cannot sink current anyway. The set point at the board drops by one diode drop (about 0.4 V): stage 6 asks for VHigh measured on the board side, and the L2-OV-01 threshold uses that value. Settled voltages above the set point depend only on the injected power and the bleed, so the predictions hold.
+- The diode carries only the bleed current (0.3 to 0.5 A). A diode on the low-side supply is optional: it only matters if the current sign is wrong, and it carries the full low-side current (about 1 W).
 
 Design choices behind the setup:
 
