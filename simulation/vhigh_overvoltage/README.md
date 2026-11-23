@@ -116,14 +116,27 @@ The 105 V peaks in the safe cases are the 100 V bus plus the 5 V turn-off spike 
 
 ### Bench confirmations (catalogue tab "Bench (L2)"), safest first
 
+All three run in one session through [`bench/bench_wizard.sh`](bench/bench_wizard.sh). The setup, the code and the reasons behind them are in [`bench/README.md`](bench/README.md).
+
+- **Firmware:** `~/code/examples`, branch `vhigh-investigation`, `TWIST/DC_DC/vhigh_investigation/`, built with Core `main`. The Core2 safety API is not used because it is still experimental.
+- **Bench guard:** the firmware opens the leg at 80 V, 2 A, or LOW1 above 30 V. It checks every 100 µs and stays latched.
+- **Bleed resistor:** a 200 Ω resistor across VHigh makes every overvoltage test limit itself.
+
+Each result is compared with a model prediction of the exact bench setup (cases D-L2P-01..06):
+
 - [ ] **L2-OV-01: confirm hypothesis 1 without any disconnect.**
-  - Put a battery or second supply on the low side and set the VHigh lab supply to 60 V.
-  - Run in boost at 1–2 A into VHigh and scope VHigh.
-  - Expected: VHigh climbs above 60 V. Stop at 80 V.
+  - Setup: lab supply at 60 V on VHigh, 24 V supply (2 A limit) on LOW1.
+  - Push 0.5, 0.75, 1.0 and 1.15 A into VHigh.
+  - Predicted: VHigh settles at 60, 60, 69.2 and 74.2 V.
+  - Confirmed if VHigh rises above 63 V at 1.0 A.
+- [ ] **L2-OV-02: the guard stops a rising VHigh at 80 V.**
+  - 1.5 A would settle at about 85 V.
+  - Predicted: the guard opens the leg at 80 V, and the bleed brings VHigh back to 60 V.
 - [ ] **L2-STP-01: confirm hypothesis 3 at low energy.**
-  - VHigh at 30 V, duty step 0.4 → 0.5, current probe on L201.
-  - Compare the overshoot with the model scaled to 30 V.
-- [ ] **L2-OV-02: once the hardware overvoltage trip exists,** measure its trip voltage and reaction time on the scope while boosting into VHigh.
+  - VHigh at 30 V, 10 Ω on LOW1, duty step 0.4 → 0.5, current probe on L201.
+  - Predicted peak: 5.2 A.
+  - The ringing frequency gives the real low-side capacitance; 60 µF is assumed.
+- [ ] **Later, once the hardware overvoltage trip exists:** measure its trip voltage and reaction time the same way.
 
 ### Firmware: Core2 safety API
 

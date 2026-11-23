@@ -1,0 +1,24 @@
+@@	D-L2P-01.a	PASS	Peak Vds(Q201) stays under the FET rating	<= 150 V	60.0 V
+@@	D-L2P-01.b	PASS	Peak |iL| stays under the L201/FET limit	<= 40 A	0.5 A
+@@	D-L2P-01.c	INFO	Margin to the 110 V absolute maximum of VHigh		-50.0 V
+@@	D-L2P-01.d	INFO	Events and VHigh at the end of the run		VHigh 60.0 V at the end, +0.0 V/ms over the last 10 %
+@@	D-L2P-02.a	PASS	Peak Vds(Q201) stays under the FET rating	<= 150 V	60.0 V
+@@	D-L2P-02.b	PASS	Peak |iL| stays under the L201/FET limit	<= 40 A	0.8 A
+@@	D-L2P-02.c	INFO	Margin to the 110 V absolute maximum of VHigh		-50.0 V
+@@	D-L2P-02.d	INFO	Events and VHigh at the end of the run		VHigh 60.0 V at the end, +0.0 V/ms over the last 10 %
+@@	D-L2P-03.a	PASS	Peak Vds(Q201) stays under the FET rating	<= 150 V	69.2 V
+@@	D-L2P-03.b	PASS	Peak |iL| stays under the L201/FET limit	<= 40 A	1.0 A
+@@	D-L2P-03.c	INFO	Margin to the 110 V absolute maximum of VHigh		-40.8 V
+@@	D-L2P-03.d	INFO	Events and VHigh at the end of the run		VHigh 69.2 V at the end, +0.0 V/ms over the last 10 %
+@@	D-L2P-04.a	PASS	Peak Vds(Q201) stays under the FET rating	<= 150 V	74.2 V
+@@	D-L2P-04.b	PASS	Peak |iL| stays under the L201/FET limit	<= 40 A	1.1 A
+@@	D-L2P-04.c	INFO	Margin to the 110 V absolute maximum of VHigh		-35.8 V
+@@	D-L2P-04.d	INFO	Events and VHigh at the end of the run		VHigh 74.2 V at the end, +0.0 V/ms over the last 10 %
+@@	D-L2P-05.a	PASS	Peak Vds(Q201) stays under the FET rating	<= 150 V	80.0 V
+@@	D-L2P-05.b	PASS	Peak |iL| stays under the L201/FET limit	<= 40 A	1.5 A
+@@	D-L2P-05.c	INFO	Margin to the 110 V absolute maximum of VHigh		-30.0 V
+@@	D-L2P-05.d	INFO	Events and VHigh at the end of the run		OV trip at 69.702 ms; VHigh 60.0 V at the end, +0.0 V/ms over the last 10 %
+@@	D-L2P-06.a	PASS	Peak Vds(Q201) stays under the FET rating	<= 150 V	35.2 V
+@@	D-L2P-06.b	PASS	Peak |iL| stays under the L201/FET limit	<= 40 A	5.2 A
+@@	D-L2P-06.c	INFO	Margin to the 110 V absolute maximum of VHigh		-74.8 V
+@@	D-L2P-06.d	INFO	Events and VHigh at the end of the run		VHigh 30.0 V at the end, +0.0 V/ms over the last 10 %

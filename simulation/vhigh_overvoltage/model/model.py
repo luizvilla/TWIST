@@ -24,6 +24,7 @@ BASE = dict(
     i_limit=None,                            # cycle-by-cycle |iL| limit in A (None: none)
     ov_trip=None, trip_delay=0.0,            # VHigh overvoltage: PWM off (latched) after the delay
     v_clamp=None,                            # proposed drain-gate active clamp on Q201 (zener voltage)
+    R_bleed=None,                            # bench bleed resistor across VHigh (ohm)
     V_feeder_min=8.9,
     L_loop=10e-9, di_dt=0.5e9,
     V_rating=150.0, V_absmax=110.0, I_rating=40.0, E_clamp_max=0.15,
@@ -113,7 +114,8 @@ def run(p):
                 iC = 0.0
         else:
             iC = 0.0
-        vH += (iC - iH) / C_H * dt
+        i_bleed = vH / p['R_bleed'] if p['R_bleed'] else 0.0
+        vH += (iC - iH - i_bleed) / C_H * dt
         # proposed active clamp: Q201 conducts (linear) whatever keeps VHigh at v_clamp
         p_cl = 0.0
         if p['v_clamp'] is not None and vH > p['v_clamp']:
