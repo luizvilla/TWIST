@@ -247,7 +247,8 @@ svg.peaks .lim{{stroke:var(--bad);stroke-dasharray:6 4}} svg.peaks .lim2{{stroke
         n = e(c['dir'].name)
         p.append(f'<tr><td><a href="{n}/report.html">{n}</a></td><td>{dt.datetime.fromtimestamp(c["when"]).strftime("%Y-%m-%d %H:%M")}</td>'
                  f'<td>{v["PASS"]} PASS · {v["FAIL"]} FAIL · {v["INFO"]} INFO</td>'
-                 f'<td><a href="{n}/record.md">record.md</a> · <a href="{n}/sim.log">sim.log</a> · <a href="{n}/summary.json">summary.json</a> · <a href="{n}/traces/">traces/</a></td></tr>')
+                 '<td>' + ' · '.join(f'<a href="{n}/{f}">{f}</a>' for f in ('record.md', 'sim.log', 'summary.json', 'session.env', 'traces/', 'steps/', 'fwscope/')
+                                     if (c['dir'] / f.rstrip('/')).exists()) + '</td></tr>')
     p.append('</table></div></section>')
     p.append('''<script>
 const tabs=[...document.querySelectorAll('[data-tab]')];

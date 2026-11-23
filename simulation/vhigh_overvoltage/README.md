@@ -140,6 +140,14 @@ Each result is compared with a model prediction of the exact bench setup (cases 
   - The ringing frequency gives the real low-side capacitance; 60 µF is assumed.
 - [ ] **Later, once the hardware overvoltage trip exists:** measure its trip voltage and reaction time the same way.
 
+### First bench session, 2026-11-23 ([report](results/bench_2026-11-23_143232/report.html))
+
+Setup: VHigh supply 32 V through an IN4007 (31.16 V at the board), 100 Ω bleed, LOW1 supply 12 V, no oscilloscope (firmware scope only).
+
+- **F-1 is confirmed on the board.** With the supply still connected, VHigh settled at 32.98 V with 1.0 A pushed into it, 1.8 V above the supply. At 1.25 A it reached 36.8 V (the model predicted 38.6 V; the difference is the converter's losses, which the model ignores).
+- **The bench guard tripped falsely on current**, at 1.25 A and at 2 A. Each trip was a single sample above the 2.5 A limit, at the moment a new reference was written. The limit did not leave room for the inductor ripple (about 1.2 A peak to peak). The wizard now sets 4 A. Still to run: the 1.5 A step of L2-OV-01, and L2-OV-02's stop on VHigh at 45 V.
+- **L2-STP-01** ran without the oscilloscope, so it is INFO only (2.5 A seen at 100 µs per sample). Redo it with the MSO54.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.

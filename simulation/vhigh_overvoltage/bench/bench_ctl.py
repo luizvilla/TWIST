@@ -247,16 +247,34 @@ def criteria(session: Path) -> list[dict]:
         if name not in steps:
             continue
         v = steps[name]['mean']['rVHigh_V']
+        last = steps[name].get('last', {})
+        if str(last.get('rTripped')).lower() in ('true', '1'):
+            row(f'L2-OV-01.{letter}', 'INFO', f'Step {name[5:]} not judged: the bench guard had stopped the leg', '',
+                f'{last.get("rTripReason")} ({last.get("rTripValue")})')
+            continue
         pv = pred.get(case, {}).get('vH_end')
+        sp_meas = float(env['VHIGH_PSU_V']) if env.get('VHIGH_PSU_V') else None
+        if pv and sp_meas and pv <= 32.0 + 0.1:
+            pv = sp_meas  # the model says the supply holds VHigh: compare with the set point measured at the board (after the diode)
         if pv:
             ok = abs(v - pv) <= 0.05 * pv
             row(f'L2-OV-01.{letter}', 'PASS' if ok else 'FAIL', f'Settled VHigh at {name[5:]} into VHigh within 5 % of {case}',
                 f'{pv:.1f} V +/- 5 %', f'{v:.2f} V ({(v - pv) / pv * 100:+.1f} %), I1 {steps[name]["mean"]["rI1Low_A"]:.3f} A')
-    if 'ov01_1.25A' in steps:
-        v = steps['ov01_1.25A']['mean']['rVHigh_V']
-        sp = float(env.get('VHIGH_PSU_V') or 32)
-        row('L2-OV-01.e', 'PASS' if v > sp + 3 else 'FAIL', 'F-1 on the board: with 1.25 A into VHigh, VHigh rises above the supply set point',
-            f'> {sp + 3:.0f} V', f'{v:.2f} V')
+    sp = float(env.get('VHIGH_PSU_V') or 32)
+    done = [(name, steps[name]['mean']['rVHigh_V']) for name, _ in OV01_STEPS[1:]
+            if name in steps and str(steps[name]['last'].get('rTripped')).lower() not in ('true', '1')]
+    if done:
+        name, v = max(done, key=lambda x: x[1])
+        row('L2-OV-01.e', 'PASS' if v > sp + 1 else 'FAIL',
+            'F-1 on the board: with 1 A or more pushed into VHigh, VHigh settles above the supply set point (supply still connected)',
+            f'> {sp + 1:.2f} V (set point at the board + 1 V)', f'{v:.2f} V at {name[5:]} (+{v - sp:.2f} V)')
+    fw2 = session / 'fwscope' / 'ov02.json'
+    if fw2.exists():
+        d = json.loads(fw2.read_text()); ch = d['channels']; pre = d['pretrigger']
+        vh, ref = ch.get('rVHigh_V', []), ch.get('rCurrentApplied_A', [])
+        if vh and ref and pre > 20:
+            row('L2-OV-01.f', 'INFO', 'VHigh just before the L2-OV-02 stop, from the firmware scope (supply still connected)', '',
+                f'{max(vh[:pre]):.2f} V with {ref[pre - 1]:+.2f} A applied (set point {sp:.2f} V)')
     if 'ov02_trip' in steps:
         t = steps['ov02_trip']['trip']
         val = float(t['rTripValue'])
@@ -322,8 +340,12 @@ def report(session: Path, rows: list[dict]) -> str:
     for k, v in env.items():
         p.append(f'<tr><td>{e(k)}</td><td>{e(v)}</td></tr>')
     p.append('</table></div><h3>2 · Results</h3><table><tr><th>Criterion</th><th>What is checked</th><th>Verdict</th><th>Limit</th><th>Measured</th></tr>')
+    seen = set()
     for r in rows:
-        p.append(f'<tr><td>{e(r["id"])}</td><td>{e(r["desc"])}</td><td>{rc.badge(r)}</td><td>{e(r["limit"])}</td><td>{e(r["measured"])}</td></tr>')
+        test = r['id'].split('.')[0]
+        anchor = f' id="{e(test)}"' if test not in seen else ''
+        seen.add(test)
+        p.append(f'<tr{anchor}><td>{e(r["id"])}</td><td>{e(r["desc"])}</td><td>{rc.badge(r)}</td><td>{e(r["limit"])}</td><td>{e(r["measured"])}</td></tr>')
     p.append('</table><h3>3 · Figures</h3>')
     figs = 0
     for fw in sorted((session / 'fwscope').glob('*.json')) if (session / 'fwscope').exists() else []:

@@ -376,9 +376,11 @@ note "More than 3 % between the board's reading and the meter fails L2-OV-01.s i
 
 # ── 7 ─────────────────────────────────────────────────────────────────────
 stage "Guard limits and current direction (0.2 A)"
-say "Bench guard: leg off, latched, if VHigh > 45 V, |I1_LOW| > 2.5 A or LOW1 > 20 V (every 100 us)."
+say "Bench guard: leg off, latched, if VHigh > 45 V, |I1_LOW| > 4 A or LOW1 > 20 V (every 100 us)."
+note "The current guard checks single samples: it needs room for about 0.6 A of inductor ripple and sample glitches"
+note "(session 2026-11-23: two false trips at 2.5 A with 1.25 A flowing)."
 ctl set Converter/wOvLimit_V 45
-ctl set Converter/wILimit_A 2.5
+ctl set Converter/wILimit_A 4.0
 ctl set Converter/wV1LowLimit_V 20
 ctl set Converter/wClear 1
 ctl set Converter/wCurrentRef_A -0.2
