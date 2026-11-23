@@ -3,7 +3,7 @@
 Investigation record, 2026-11-23. Board: TWIST V1.4.3 (also applies to the Ownverter, which shares the power-leg topology).
 
 - **Results:** [`results/control-center.html`](results/control-center.html). Every case has interactive figures and links to its campaign.
-- **Simulation code:** `/data/tmp/twist_sim`. This is a working folder that is not in this repository. Its `README.md` explains how to run a campaign and add a case.
+- **Simulation code:** [`model/`](model/). Its `README.md` explains how to run a campaign and add a case.
 
 ## 1. The problem
 
@@ -62,7 +62,7 @@ The original guess was a fast inductive spike when the cable comes out. The fiel
 
 ## 4. Simulation
 
-**Model.** Averaged model of one leg (`/data/tmp/twist_sim/model.py`):
+**Model.** Averaged model of one leg ([`model/model.py`](model/model.py)):
 - Q201/Q202, L201 with its resistance, about 138 µF on VHigh, and a lab supply with cable inductance and resistance (optionally unable to sink, optionally disconnected).
 - Low side: a battery, a passive load (capacitor in parallel with a resistor), or a motor plus rider modelled as a 3 F equivalent capacitor.
 - Control: a PI current loop or an open-loop duty.
@@ -157,9 +157,9 @@ The 105 V peaks in the safe cases are the 100 V bus plus the 5 V turn-off spike 
 ## 6. Reproducing
 
 ```bash
-cd /data/tmp/twist_sim
+cd simulation/vhigh_overvoltage/model
 python3 -I run_campaign.py            # every case, about 5 s; writes a new campaign into results/
 python3 -I run_campaign.py D-SKT-02   # one case
 ```
 
-Then open `results/control-center.html`. Cases are defined in `/data/tmp/twist_sim/catalogue.json`. `TWIST_SIM_OUT` redirects the output.
+Then open `results/control-center.html`. Cases are defined in [`model/catalogue.json`](model/catalogue.json). `TWIST_SIM_OUT` redirects the output.
