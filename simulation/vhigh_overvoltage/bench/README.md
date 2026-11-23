@@ -52,6 +52,13 @@ Design choices behind the setup:
 - L2-STP-01 runs at 30 V and with a 0.1 duty step so that the overshoot stays at about 5 A, under the 7 A I1_LOW range.
 - The low-side capacitance in D-L2P-06 (60 uF) is an assumption. The ringing frequency in the capture gives its real value.
 
+## Without an oscilloscope
+
+Stage 5 asks whether an MSO54 is connected. Without one, the session uses the board's own measurements (ThingSet) and its firmware scope (100 us per sample):
+
+- L2-OV-01 and L2-OV-02 keep their verdicts: they are judged on settled ThingSet readings and on the guard's trip value.
+- L2-STP-01 becomes INFO only. Its ringing has a period of about 280 us, so 100 us sampling misses the true peak. Redo it with the MSO54 for a verdict.
+
 ## Results
 
 Each session writes `../results/bench_<date>_<time>/`:

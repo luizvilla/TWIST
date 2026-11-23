@@ -274,6 +274,14 @@ def criteria(session: Path) -> list[dict]:
         if vh:
             row('L2-OV-02.c', 'INFO', 'VHigh rise seen by the firmware scope', '', f'{min(vh):.1f} to {max(vh):.1f} V over {len(vh) * d["period_s"] * 1e3:.0f} ms')
     stp = session / 'scope' / 'stp01' / 'waveforms.npz'
+    fw_stp = session / 'fwscope' / 'stp01.json'
+    if not stp.exists() and fw_stp.exists():
+        d = json.loads(fw_stp.read_text()); i1 = d['channels'].get('rI1Low_A', [])
+        pp = pred.get('D-L2P-06', {}).get('iL_pk')
+        if i1:
+            row('L2-STP-01.a', 'INFO', 'Peak I1_LOW after the 0.4 to 0.5 step, firmware scope only (100 us per sample: the '
+                '280 us ringing is undersampled, so the true peak is higher). Redo with the MSO54 for a verdict',
+                f'model {pp:.2f} A' if pp else '', f'{max(i1):.2f} A seen at 100 us')
     if stp.exists():
         import numpy as np
         w = np.load(stp)
@@ -325,7 +333,7 @@ def report(session: Path, rows: list[dict]) -> str:
         c = f.chart('V', 220)
         if 'rVHigh_V' in ch:
             f.line(c, 'VHigh (firmware, V)', t, ch['rVHigh_V'], rc.BLUE, 2.5)
-        c['hlines'] = [{'v': 45, 'color': rc.CRITICAL, 'dash': [6, 4]}]
+        c['hlines'] = [{'v': 45, 'color': rc.CRITICAL, 'dash': [6, 4]}] if fw.stem.startswith('ov') else []
         c['events'] = [{'t': 0, 'label': 'trigger'}]
         c2 = f.chart('A', 150)
         if 'rI1Low_A' in ch:
@@ -337,7 +345,7 @@ def report(session: Path, rows: list[dict]) -> str:
             f.line(c3, 'duty', t, ch['rDuty'], rc.GREEN, 1.5)
         p.append(f'<figure><div><b>Firmware scope: {e(fw.stem)}</b></div>{f.html("fw_" + fw.stem, "firmware scope " + fw.stem)}'
                  '<figcaption>Sampled every control period (100 us) by the example firmware; time 0 is the trigger (mode change, step or guard trip). '
-                 'Red dashed: the 45 V guard.</figcaption></figure>')
+                 'Red dashed (OV runs): the 45 V guard.</figcaption></figure>')
         figs += 1
     for wf in sorted((session / 'scope').glob('*/waveforms.npz')) if (session / 'scope').exists() else []:
         import numpy as np
