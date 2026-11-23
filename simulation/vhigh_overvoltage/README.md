@@ -165,6 +165,14 @@ Same setup (31.14 V at the board, 12 V LOW1 supply, 100 Ω bleed, no oscilloscop
 - **The leg tripped on LOW1 > 20 V at the direction check:** current flowed into the 12 V supply, with the duty following the feedforward V1_low / V_high up to 0.643. The same firmware had the direction right in the previous session. The trip happened while the current was being observed with a probe on TP203, the ADC input of I1_LOW: an offset there makes the closed loop regulate a wrong current, and with a LOW1 supply that cannot sink, any real current into LOW1 raises it until the guard. The TP203 probe now goes on only for the open-loop duty step. The wizard also records the start-up with the firmware scope and stops when the direction check trips.
   - Lesson for the safety work: a current loop that pushes power into a source that cannot sink is only as good as its current measurement. The LOW1 overvoltage guard is what caught it.
 
+### Fourth and fifth attempts, 2026-11-23 (sessions 173344 and 173944): the bench firmware's current loop
+
+Both stopped at the direction check with LOW1 above 20 V, the second one without any probe on TP203. The firmware scope recorded the start-up: the current jumped to +0.3 A (into LOW1) and stayed there while the duty followed V1_low / V_high from 0.395 to 0.645 in 12 ms.
+
+- **Cause: the bench firmware.** Its feedforward took V1_low live. The V1_LOW sensor of this board reads 4 % high (every sensor check: 12.47 V against 11.98 V), so the leg applied 4 % more than LOW1's real voltage. Current flowed into LOW1, the 12 V supply could not take it, LOW1 rose, and the feedforward followed: a loop gain of 1.04, a runaway. The PI (about 150 Hz, 1e-3 duty per A) was far too weak to stop it. Reproduced in simulation (`/data/tmp/loop_check.py` variant): with a 1.04 gain the old firmware drifts LOW1 towards 20 V, with 1.08 it trips in 5 ms.
+- **Fix** (examples `vhigh-investigation`, commit "freeze V1 in the feedforward"): V1 is taken once when the mode starts, so a rising LOW1 now drives the current back down; the PI goes to about 500 Hz. In simulation it reaches the −0.2 A reference with LOW1 sensor gains of 1.00, 1.04 and 1.08, LOW1 peaking at 12.6 V on this board's 4 %.
+- **Lesson for the safety work:** this is the field failure's mechanism on the low side. Power control into a source that cannot sink, with a voltage feedforward, depends on sensor gains. The LOW1 overvoltage guard is what stopped it.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.

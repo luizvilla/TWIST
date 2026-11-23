@@ -378,6 +378,7 @@ say "Measure with a multimeter at the board terminals, then the wizard reads the
 note "Measure VHigh on the board side of the diode: one diode drop below the supply set point."
 ask VHIGH_PSU_V "VHigh at the board terminals, after the diode (V):"
 ask VLOW_PSU_V "LOW1 at the board terminals (V):"
+VHIGH_PSU_V="${VHIGH_PSU_V/,/.}"; VLOW_PSU_V="${VLOW_PSU_V/,/.}"   # accept a decimal comma
 write_env VHIGH_PSU_V "$VHIGH_PSU_V"
 write_env VLOW_PSU_V "$VLOW_PSU_V"
 ctl settle sensor_check --seconds 0.5 --session "$SESSION"

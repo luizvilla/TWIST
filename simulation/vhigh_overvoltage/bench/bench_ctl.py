@@ -458,7 +458,10 @@ def parse_env(p: Path) -> dict:
         for line in p.read_text().splitlines():
             if '=' in line:
                 k, v = line.split('=', 1)
-                out[k.strip()] = v.strip().strip("'")
+                v = v.strip().strip("'")
+                if v.count(',') == 1 and v.replace(',', '', 1).replace('.', '', 1).lstrip('-').isdigit():
+                    v = v.replace(',', '.')  # a decimal comma typed at the prompt
+                out[k.strip()] = v
     return out
 
 
