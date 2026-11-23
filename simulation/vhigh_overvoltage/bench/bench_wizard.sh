@@ -269,9 +269,12 @@ note "examples branch: $(git -C "$EXAMPLES_DIR" branch --show-current) at $(git 
 [[ "$(git -C "$EXAMPLES_DIR" branch --show-current)" == "vhigh-investigation" ]] || warn "examples is not on vhigh-investigation"
 EX="$EXAMPLES_DIR/TWIST/DC_DC/vhigh_investigation"
 [[ -f "$EX/main.cpp" ]] || { warn "missing $EX"; exit 1; }
-confirm "Copy the example into $CORE_DIR/src (replaces that worktree's src) and build?" || exit 1
-run cp "$EX"/*.cpp "$EX"/*.h "$EX"/app.ini "$EX"/app.conf "$EX"/app.overlay "$CORE_DIR/src/"
-(cd "$CORE_DIR" && run "$PIO" run -e USB) || { warn "build failed"; exit 1; }
+if confirm "Copy the example into $CORE_DIR/src (replaces that worktree's src) and build? (No: keep the firmware already built)"; then
+  run cp "$EX"/*.cpp "$EX"/*.h "$EX"/app.ini "$EX"/app.conf "$EX"/app.overlay "$CORE_DIR/src/"
+  (cd "$CORE_DIR" && run "$PIO" run -e USB) || { warn "build failed"; exit 1; }
+else
+  note "Build skipped: the session records the commits below, which must match the firmware on the board."
+fi
 write_env CORE_DIR "$CORE_DIR"
 write_env EXAMPLES_DIR "$EXAMPLES_DIR"
 write_env FW_CORE_COMMIT "$(git -C "$CORE_DIR" rev-parse HEAD)"
