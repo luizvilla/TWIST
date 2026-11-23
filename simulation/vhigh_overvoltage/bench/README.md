@@ -71,7 +71,7 @@ Passive 10x voltage probes only, all referenced to the board ground; no current 
 
 Stage 5 asks which channel carries which signal, so any layout works. A current probe on the bleed resistor, if there is one, is used as a direct check that the energy pushed into VHigh ends in the bleed (L2-OV-01.h: bleed current × R against VHigh).
 
-The ACS730 (U202) sits between L201 and the low-side capacitors (C203 47 uF switched by Q203, plus C206, C209 and C212 at 4.7 uF), so TP203 carries the true inductor current, with about 1 MHz of bandwidth. A current probe on the LOW1 wire would only see the load current, smoothed by those capacitors. The record converts CH3 to amps and checks the scale against the board's own reading before the step (L2-STP-01.b). The scope ground is earth: never clip a probe ground anywhere but the board ground.
+The ACS730 (U202) sits between L201 and the low-side capacitors (C203 47 uF switched by Q203, plus C206, C209 and C212 at 4.7 uF), so TP203 carries the true inductor current, with about 1 MHz of bandwidth. A current probe on the LOW1 wire would only see the load current, smoothed by those capacitors. Clip the TP203 probe on only for L2-STP-01 (stage 10, PWM off). TP203 is the ADC input of I1_LOW: in session 2026-11-23_170833 a probe there shifted the current the loop regulates, and the leg pushed current into LOW1 until the 20 V guard stopped it. L2-STP-01 runs at a fixed duty with no current loop, so the probe cannot upset it there. The record converts CH3 to amps and checks the scale against the board's own reading before the step (L2-STP-01.b). The scope ground is earth: never clip a probe ground anywhere but the board ground.
 
 ## Without an oscilloscope
 

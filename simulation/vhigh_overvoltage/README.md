@@ -162,7 +162,8 @@ Same setup (31.14 V at the board, 12 V LOW1 supply, 100 Ω bleed, no oscilloscop
 
 - **The MSO54 captured nothing.** Its USB link was out of step (a stale reply in its queue, then refused USB writes after an acquisition was stopped mid-run), so the wizard fell back to the firmware scope. The helper now arms the scope in single sequence on each test's edge, reads it only once it has stopped, and resets the USB link when the scope does not answer.
 - **Scope channels on this bench:** CH1 LOW1, CH2 VHigh, CH3 bleed current (current probe), CH4 TP203 (inductor current). These are the wizard's defaults.
-- **The leg tripped on LOW1 > 20 V at the direction check:** current flowed into the 12 V supply, with the duty following the feedforward V1_low / V_high up to 0.643. The same firmware had the direction right in the previous session; the new element was the probes, including one on TP203, the ADC input of I1_LOW. The wizard now records the start-up with the firmware scope and stops when the direction check trips.
+- **The leg tripped on LOW1 > 20 V at the direction check:** current flowed into the 12 V supply, with the duty following the feedforward V1_low / V_high up to 0.643. The same firmware had the direction right in the previous session. The trip happened while the current was being observed with a probe on TP203, the ADC input of I1_LOW: an offset there makes the closed loop regulate a wrong current, and with a LOW1 supply that cannot sink, any real current into LOW1 raises it until the guard. The TP203 probe now goes on only for the open-loop duty step. The wizard also records the start-up with the firmware scope and stops when the direction check trips.
+  - Lesson for the safety work: a current loop that pushes power into a source that cannot sink is only as good as its current measurement. The LOW1 overvoltage guard is what caught it.
 
 ### Firmware: Core2 safety API
 

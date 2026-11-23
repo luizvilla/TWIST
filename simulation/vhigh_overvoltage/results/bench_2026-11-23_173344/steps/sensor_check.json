@@ -1,0 +1,37 @@
+{
+ "name": "sensor_check",
+ "time": "2026-11-23T17:36:27",
+ "mean": {
+  "rVHigh_V": 31.189,
+  "rV1Low_V": 12.465,
+  "rI1Low_A": 0.0445,
+  "rDuty": 0.4,
+  "rVHigh_V_sd": 0.109859000541604,
+  "rI1Low_A_sd": 0.030137186331839275
+ },
+ "last": {
+  "rVHigh_V": 31.3,
+  "rV1Low_V": 12.41,
+  "rI1Low_A": -0.013,
+  "rV2Low_V": 0.0,
+  "rI2Low_A": 0.0,
+  "rIHigh_A": 0.0,
+  "rDuty": 0.4,
+  "rTemp1_degC": 31.4,
+  "rTemp2_degC": 30.6,
+  "Mode": 0,
+  "wCurrentRef_A": 0.0,
+  "rCurrentApplied_A": 0.0,
+  "wDuty0": 0.4,
+  "wDuty1": 0.5,
+  "wStep": 0,
+  "wOvLimit_V": 40.0,
+  "wILimit_A": 6.5,
+  "wV1LowLimit_V": 20.0,
+  "rTripped": false,
+  "rTripCode": 0,
+  "rTripReason": "none",
+  "rTripValue": 0.0
+ },
+ "expect": null
+}

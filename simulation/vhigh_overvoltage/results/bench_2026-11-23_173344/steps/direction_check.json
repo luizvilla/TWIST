@@ -1,0 +1,37 @@
+{
+ "name": "direction_check",
+ "time": "2026-11-23T17:36:51",
+ "mean": {
+  "rVHigh_V": 31.125999999999998,
+  "rV1Low_V": 12.455,
+  "rI1Low_A": 0.060899999999999996,
+  "rDuty": 0.6297,
+  "rVHigh_V_sd": 0.11525623627379065,
+  "rI1Low_A_sd": 0.03476334276216831
+ },
+ "last": {
+  "rVHigh_V": 31.12,
+  "rV1Low_V": 12.58,
+  "rI1Low_A": 0.035,
+  "rV2Low_V": 0.0,
+  "rI2Low_A": 0.0,
+  "rIHigh_A": 0.0,
+  "rDuty": 0.6297,
+  "rTemp1_degC": 31.5,
+  "rTemp2_degC": 30.7,
+  "Mode": 0,
+  "wCurrentRef_A": -0.2,
+  "rCurrentApplied_A": 0.0,
+  "wDuty0": 0.4,
+  "wDuty1": 0.5,
+  "wStep": 0,
+  "wOvLimit_V": 45.0,
+  "wILimit_A": 4.0,
+  "wV1LowLimit_V": 20.0,
+  "rTripped": true,
+  "rTripCode": 3,
+  "rTripReason": "V1_LOW above wV1LowLimit_V",
+  "rTripValue": 20.013
+ },
+ "expect": null
+}
