@@ -7,7 +7,8 @@ folder into a campaign the control center reads (sim.log @@ lines, summary.json,
 
 Needs pyserial, pyvisa, pyvisa-py, numpy: run it with the Core2 venv (~/code/Core2/.venv/bin/python).
 
-  bench_ctl.py find                              print the ThingSet port of the bench firmware
+  bench_ctl.py list                              every OwnTech serial port: board, serial number, interface
+  bench_ctl.py find                              print the ThingSet port running the bench firmware
   bench_ctl.py --port P identity                 build commit of the firmware
   bench_ctl.py --port P read                     every measurement and the guard state, as JSON
   bench_ctl.py --port P set Converter/Mode 1     write one ThingSet value
@@ -61,8 +62,8 @@ def shell(port: str):
 
 def get(ts, path: str):
     ok, v = ts.get_value(path)
-    if not ok:
-        raise SystemExit(f'ThingSet read failed: {path}')
+    if not ok or (isinstance(v, str) and 'Invalid' in v):  # the shell answers errors as a quoted string
+        raise SystemExit(f'ThingSet read failed: {path} ({v})')
     from thingset import parse_scalar
     return parse_scalar(v) if isinstance(v, str) else v
 
@@ -79,15 +80,30 @@ def read_all(ts) -> dict:
     return d
 
 
+def ports() -> list[str]:
+    """@brief OwnTech USB serial ports only (never an ST-Link or another device), from /dev/serial/by-id."""
+    found = []
+    for link in sorted(glob.glob('/dev/serial/by-id/usb-OwnTech*-if02')):  # ThingSet shell: the second USB serial port
+        found.append(str(Path(link).resolve()))
+    return found or sorted(glob.glob('/dev/ttyACM*'))
+
+
+def cmd_list(_a) -> None:
+    """@brief Every OwnTech serial port: board name, serial number, USB interface."""
+    for link in sorted(glob.glob('/dev/serial/by-id/usb-OwnTech*')):
+        name = Path(link).name.replace('usb-OwnTech_Technologies_', '')
+        print(f'{Path(link).resolve()}  {name}')
+
+
 def cmd_find(_a) -> None:
-    for port in sorted(glob.glob('/dev/ttyACM*')):
+    for port in ports():
         try:
             ts = shell(port)
             ok, v = ts.get_value('Converter/wOvLimit_V')
             ts.ser.close()
-            if ok and v is not None:
-                print(port)
-                return
+            float(v)  # the bench firmware answers a number; another firmware answers "Invalid endpoint"
+            print(port)
+            return
         except (SystemExit, Exception):
             continue
     raise SystemExit('no port with the vhigh_investigation firmware (Converter/wOvLimit_V) found')
@@ -351,6 +367,7 @@ def main() -> None:
     ap.add_argument('--resource', help='MSO54 VISA resource (default: first Tektronix on USB)')
     sub = ap.add_subparsers(dest='cmd', required=True)
     sub.add_parser('find')
+    sub.add_parser('list')
     sub.add_parser('identity')
     sub.add_parser('read')
     s = sub.add_parser('set'); s.add_argument('path'); s.add_argument('value')
@@ -367,6 +384,8 @@ def main() -> None:
     a = ap.parse_args()
     if a.cmd == 'find':
         return cmd_find(a)
+    if a.cmd == 'list':
+        return cmd_list(a)
     if a.cmd in ('identity', 'read', 'set', 'settle', 'wait-trip', 'fwscope-arm', 'fwscope-read') and not a.port:
         raise SystemExit('--port is required (bench_ctl.py find prints it)')
     if a.cmd == 'identity':
