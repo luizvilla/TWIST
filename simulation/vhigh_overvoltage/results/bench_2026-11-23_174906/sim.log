@@ -1,0 +1,13 @@
+@@	L2-OV-01.sV_HIGH	PASS	V_HIGH sensor against the supply display	|error| <= 3 %	31.17 V vs 32.00 V (-2.6 %)
+@@	L2-OV-01.sV1_LOW	FAIL	V1_LOW sensor against the supply display	|error| <= 3 %	12.43 V vs 12.00 V (+3.6 %)
+@@	L2-OV-01.a	PASS	Settled VHigh at 0.50A into VHigh within 5 % of D-L2P-01	32.0 V +/- 5 %	31.20 V (-2.5 %), I1 -0.463 A
+@@	L2-OV-01.b	INFO	Step 1.00A not judged: LOW1 sagged (its supply in current limit)		LOW1 8.10 V against 12 V set; VHigh 31.21 V
+@@	L2-OV-01.c	INFO	Step 1.25A not judged: LOW1 sagged (its supply in current limit)		LOW1 10.47 V against 12 V set; VHigh 34.10 V
+@@	L2-OV-01.d	FAIL	Settled VHigh at 1.50A into VHigh within 5 % of D-L2P-04	42.2 V +/- 5 %	39.79 V (-5.8 %), I1 -1.532 A
+@@	L2-OV-01.e	PASS	F-1 on the board: with 1 A or more pushed into VHigh, VHigh settles above the supply set point (supply still connected)	> 33.00 V (set point at the board + 1 V)	39.79 V at 1.50A (+7.79 V)
+@@	L2-OV-01.g	INFO	Power balance above the set point: LOW1 power taken by the leg against the power in the bleed. The difference is the converter losses and the Feeder load on VHigh, which the model leaves out		1.50A: 18.7 W in, 15.8 W in the bleed (85 %)
+@@	L2-OV-01.h	INFO	Bleed current probe at 1.5 A: the energy pushed into VHigh ends in the bleed		0.378 A x 100 ohm = 37.84 V against VHigh 39.49 V; 14.9 W in the bleed
+@@	L2-OV-01.f	INFO	VHigh just before the L2-OV-02 stop, from the firmware scope (supply still connected)		32.67 V with -2.00 A applied (set point 32.00 V)
+@@	L2-OV-02.a	INFO	No guard trip: VHigh did not reach the 45 V limit (MSO54 capture)		VHigh peaked at 43.5 V; LOW1 fell to 9.6 V (its supply in current limit)
+@@	L2-OV-02.c	INFO	VHigh rise seen by the firmware scope		30.7 to 32.7 V over 102 ms
+@@	L2-STP-01.a	INFO	Not judged: the MSO54 window does not contain the trigger (horizontal delay on)		window 13.80 to 15.80 ms after the trigger

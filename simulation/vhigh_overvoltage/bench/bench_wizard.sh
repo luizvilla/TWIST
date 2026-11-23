@@ -427,6 +427,8 @@ fi
 stage "L2-OV-01: current steps into VHigh"
 say "Four steps of the reference. At each one VHigh settles where the bleed burns what is injected."
 say "Expected: 32 V at 0.5 A (the supply holds it), then about 34.5 V at 1.0 A, 38.6 V at 1.25 A and 42.2 V at 1.5 A."
+warn "Check the 12 V supply's current limit is 3 A: at 1.5 A into VHigh it delivers about 2 A, and 2.6 A in L2-OV-02."
+note "In current limit LOW1 sags, the leg gets less power, and VHigh stays low: the step is then not judged."
 confirm "Run the four steps (about 15 s in total)?" || { idle; exit 1; }
 for I in 0.50 1.00 1.25 1.50; do
   ctl set Converter/wCurrentRef_A "-$I" >/dev/null

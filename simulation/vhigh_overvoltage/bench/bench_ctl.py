@@ -268,6 +268,7 @@ def cmd_mso_arm(a) -> None:
         sc.inst.write(f'{ch}:POSition 0')
         sc.inst.write(f'{ch}:SCAle {scale}')
         sc.inst.write(f'{ch}:OFFSet {offset}')
+    sc.inst.write('HORizontal:DELay:MODe OFF')  # a delay left on from earlier settings moves the window away from the trigger
     sc.inst.write('HORizontal:MODe AUTO')
     sc.inst.write(f'HORizontal:SCAle {a.hscale if a.hscale else p["hscale"]}')
     sc.inst.write(f'HORizontal:POSition {a.hpos if a.hpos is not None else p["hpos"]}')
@@ -359,6 +360,12 @@ def criteria(session: Path) -> list[dict]:
             continue
         v = steps[name]['mean']['rVHigh_V']
         last = steps[name].get('last', {})
+        v1_set = float(env.get('VLOW_PSU_V') or 12)
+        v1 = steps[name]['mean']['rV1Low_V']
+        if v1 < 0.95 * v1_set:
+            row(f'L2-OV-01.{letter}', 'INFO', f'Step {name[5:]} not judged: LOW1 sagged (its supply in current limit)', '',
+                f'LOW1 {v1:.2f} V against {v1_set:g} V set; VHigh {v:.2f} V')
+            continue
         if str(last.get('rTripped')).lower() in ('true', '1'):
             row(f'L2-OV-01.{letter}', 'INFO', f'Step {name[5:]} not judged: the bench guard had stopped the leg', '',
                 f'{last.get("rTripReason")} ({last.get("rTripValue")})')
@@ -372,8 +379,10 @@ def criteria(session: Path) -> list[dict]:
             row(f'L2-OV-01.{letter}', 'PASS' if ok else 'FAIL', f'Settled VHigh at {name[5:]} into VHigh within 5 % of {case}',
                 f'{pv:.1f} V +/- 5 %', f'{v:.2f} V ({(v - pv) / pv * 100:+.1f} %), I1 {steps[name]["mean"]["rI1Low_A"]:.3f} A')
     sp = float(env.get('VHIGH_PSU_V') or 32)
-    done = [(name, steps[name]['mean']['rVHigh_V']) for name, _ in OV01_STEPS[1:]
-            if name in steps and str(steps[name]['last'].get('rTripped')).lower() not in ('true', '1')]
+    v1_set = float(env.get('VLOW_PSU_V') or 12)
+    held = lambda n: n in steps and steps[n]['mean']['rV1Low_V'] >= 0.95 * v1_set and \
+        str(steps[n]['last'].get('rTripped')).lower() not in ('true', '1')
+    done = [(name, steps[name]['mean']['rVHigh_V']) for name, _ in OV01_STEPS[1:] if held(name)]
     if done:
         name, v = max(done, key=lambda x: x[1])
         row('L2-OV-01.e', 'PASS' if v > sp + 1 else 'FAIL',
@@ -382,7 +391,7 @@ def criteria(session: Path) -> list[dict]:
     bal = []
     rb = float(env.get('R_BLEED_OHM') or 100)
     for name, _ in OV01_STEPS[1:]:
-        if name in steps and str(steps[name]['last'].get('rTripped')).lower() not in ('true', '1'):
+        if held(name):
             m = steps[name]['mean']; vh = m['rVHigh_V']
             if vh > sp + 0.5:  # above the set point the supply delivers nothing: all of the bleed power comes from the leg
                 p_in = m['rV1Low_V'] * abs(m['rI1Low_A']); p_out = vh ** 2 / rb
@@ -417,6 +426,15 @@ def criteria(session: Path) -> list[dict]:
             sp = float(env.get('VHIGH_PSU_V') or 32)
             row('L2-OV-02.b', 'PASS' if after < sp + 3 else 'FAIL', 'After the stop VHigh falls back to the supply through the bleed',
                 f'< {sp + 3:.0f} V', f'{after:.2f} V')
+    cap2 = session / 'scope' / 'ov02' / 'waveforms.npz'
+    if 'ov02_trip' not in steps and cap2.exists():
+        import numpy as np
+        w2 = np.load(cap2); cv, cl = env.get('CH_VHIGH'), env.get('CH_VLOW')
+        if cv and f'{cv}_v' in w2:
+            msg = f'VHigh peaked at {float(w2[f"{cv}_v"].max()):.1f} V'
+            if cl and f'{cl}_v' in w2:
+                msg += f'; LOW1 fell to {float(w2[f"{cl}_v"].min()):.1f} V (its supply in current limit)'
+            row('L2-OV-02.a', 'INFO', 'No guard trip: VHigh did not reach the 45 V limit (MSO54 capture)', '', msg)
     fw = session / 'fwscope' / 'ov02.json'
     if fw.exists():
         d = json.loads(fw.read_text()); vh = d['channels'].get('rVHigh_V', [])
@@ -435,7 +453,11 @@ def criteria(session: Path) -> list[dict]:
         import numpy as np
         w = np.load(stp)
         ch = env.get('IL_CHANNEL', 'CH3')
-        if f'{ch}_v' in w:
+        t_il = w[f'{ch}_t'] if f'{ch}_t' in w else None
+        if t_il is not None and not (t_il[0] <= 0.0 <= t_il[-1]):
+            row('L2-STP-01.a', 'INFO', 'Not judged: the MSO54 window does not contain the trigger (horizontal delay on)', '',
+                f'window {t_il[0] * 1e3:.2f} to {t_il[-1] * 1e3:.2f} ms after the trigger')
+        elif f'{ch}_v' in w:
             v = w[f'{ch}_v']
             if env.get('IL_SOURCE') == 'TP203':  # ACS730 output after the level shift: volts to amps
                 v = (v - float(env.get('IL_OFFSET_V', 1.0))) / float(env.get('IL_V_PER_A', 0.1))

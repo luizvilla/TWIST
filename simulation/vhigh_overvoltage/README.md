@@ -173,6 +173,16 @@ Both stopped at the direction check with LOW1 above 20 V, the second one without
 - **Fix** (examples `vhigh-investigation`, commit "freeze V1 in the feedforward"): V1 is taken once when the mode starts, so a rising LOW1 now drives the current back down; the PI goes to about 500 Hz. In simulation it reaches the −0.2 A reference with LOW1 sensor gains of 1.00, 1.04 and 1.08, LOW1 peaking at 12.6 V on this board's 4 %.
 - **Lesson for the safety work:** this is the field failure's mechanism on the low side. Power control into a source that cannot sink, with a voltage feedforward, depends on sensor gains. The LOW1 overvoltage guard is what stopped it.
 
+### Sixth session, 2026-11-23 ([report](results/bench_2026-11-23_174906/report.html)): fixed firmware, supply limit
+
+Firmware with the frozen-V1 feedforward (examples `6290f81`), MSO54 armed by the wizard.
+
+- **The fix works:** the direction check held −0.19 A at −0.2 A with LOW1 at 12.3 V, on the same supply that ran away before.
+- **The 12 V supply was left at a 1 A current limit** for part of the run (operator note). At 1.0 A and 1.25 A LOW1 sagged to 8.1 and 10.5 V, so those steps are not judged. At 1.5 A, with the limit corrected, VHigh settled at 39.79 V (session 2: 40.06 V), and the MSO54 confirms it independently: 0.378 A through the bleed while VHigh read 39.5 V.
+- **L2-OV-02 did not reach the guard,** again because of the supply limit, but the scope caught the rise on its 43 V trigger: VHigh from 37.6 to 43.2 V, then back down as LOW1 sagged from 11.7 to 9.9 V.
+- **L2-STP-01 missed the step:** a horizontal delay left on the scope put the window 13.8 ms after the trigger. The wizard now switches the delay off.
+- Still to do: L2-OV-02's stop at 45 V and L2-STP-01's peak, with the supply limit at 3 A.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.
