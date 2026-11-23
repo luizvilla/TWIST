@@ -183,6 +183,12 @@ Firmware with the frozen-V1 feedforward (examples `6290f81`), MSO54 armed by the
 - **L2-STP-01 missed the step:** a horizontal delay left on the scope put the window 13.8 ms after the trigger. The wizard now switches the delay off.
 - Still to do: L2-OV-02's stop at 45 V and L2-STP-01's peak, with the supply limit at 3 A.
 
+### Seventh session, 2026-11-23 ([report](results/bench_2026-11-23_180658/report.html)): F-1 and the guard, end to end
+
+- **L2-OV-01, all four steps valid:** VHigh settled at 29.29 / 31.79 / 35.95 / 39.67 V for 0.5 / 1.0 / 1.25 / 1.5 A pushed into it, with the supply connected; 85 to 86 % of the power from LOW1 reached the bleed. The VHigh supply was still at 30 V from the previous duty step (the board read 29.3 V against the 32 V typed), so the model comparisons and L2-SEN-01 read low; the rise above the set point does not depend on it.
+- **L2-OV-02 passed:** VHigh rose from 28.8 V, the guard opened the leg at 45.06 V on V_HIGH, and the bleed brought VHigh back to 29.2 V. The MSO54 caught it on its 43 V trigger.
+- **L2-STP-01 did not run:** entering STEP mode jumped to duty 0.4 into a LOW1 discharged by its 10 Ω load, which rang the tank to the 6.5 A current guard before any step. Fixed in the firmware (examples `504bf68`: soft start to duty_0 in about 100 ms; the step stays a step); the wizard now stops if the guard has tripped before the step, and can skip the VHigh tests.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.

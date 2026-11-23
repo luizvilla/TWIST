@@ -1,0 +1,37 @@
+{
+ "name": "stp_after",
+ "time": "2026-11-23T18:14:07",
+ "mean": {
+  "rVHigh_V": 29.21,
+  "rV1Low_V": 0.826,
+  "rI1Low_A": 0.047599999999999996,
+  "rDuty": 0.4,
+  "rVHigh_V_sd": 0.11541230437002829,
+  "rI1Low_A_sd": 0.02408817137102773
+ },
+ "last": {
+  "rVHigh_V": 29.18,
+  "rV1Low_V": 0.69,
+  "rI1Low_A": 0.051,
+  "rV2Low_V": 0.0,
+  "rI2Low_A": 0.0,
+  "rIHigh_A": 0.0,
+  "rDuty": 0.4,
+  "rTemp1_degC": 33.9,
+  "rTemp2_degC": 32.7,
+  "Mode": 0,
+  "wCurrentRef_A": 0.0,
+  "rCurrentApplied_A": 0.0,
+  "wDuty0": 0.4,
+  "wDuty1": 0.5,
+  "wStep": 1,
+  "wOvLimit_V": 40.0,
+  "wILimit_A": 6.5,
+  "wV1LowLimit_V": 20.0,
+  "rTripped": true,
+  "rTripCode": 2,
+  "rTripReason": "|I1_LOW| above wILimit_A",
+  "rTripValue": 7.691
+ },
+ "expect": null
+}

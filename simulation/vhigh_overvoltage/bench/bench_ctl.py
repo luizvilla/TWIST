@@ -352,7 +352,7 @@ def criteria(session: Path) -> list[dict]:
         for key, psu, label in (('rVHigh_V', 'VHIGH_PSU_V', 'V_HIGH'), ('rV1Low_V', 'VLOW_PSU_V', 'V1_LOW')):
             if env.get(psu):
                 ref = float(env[psu]); err = (m[key] - ref) / ref * 100
-                row(f'L2-OV-01.s{label}', 'PASS' if abs(err) <= 3 else 'FAIL', f'{label} sensor against the supply display',
+                row(f'L2-SEN-01.{label}', 'PASS' if abs(err) <= 3 else 'FAIL', f'{label} sensor against the meter at the board terminals',
                     '|error| <= 3 %', f'{m[key]:.2f} V vs {ref:.2f} V ({err:+.1f} %)')
     letters = 'abcd'
     for (name, case), letter in zip(OV01_STEPS, letters):

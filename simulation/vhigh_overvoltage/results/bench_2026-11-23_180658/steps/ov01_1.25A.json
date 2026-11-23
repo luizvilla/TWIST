@@ -1,0 +1,37 @@
+{
+ "name": "ov01_1.25A",
+ "time": "2026-11-23T18:09:30",
+ "mean": {
+  "rVHigh_V": 35.951,
+  "rV1Low_V": 12.172,
+  "rI1Low_A": -1.2442,
+  "rDuty": 0.28861,
+  "rVHigh_V_sd": 0.14679577650600156,
+  "rI1Low_A_sd": 0.08298409486160584
+ },
+ "last": {
+  "rVHigh_V": 35.98,
+  "rV1Low_V": 12.19,
+  "rI1Low_A": -1.225,
+  "rV2Low_V": 0.0,
+  "rI2Low_A": 0.0,
+  "rIHigh_A": 0.0,
+  "rDuty": 0.2881,
+  "rTemp1_degC": 35.4,
+  "rTemp2_degC": 32.3,
+  "Mode": 1,
+  "wCurrentRef_A": -1.25,
+  "rCurrentApplied_A": -1.25,
+  "wDuty0": 0.4,
+  "wDuty1": 0.5,
+  "wStep": 0,
+  "wOvLimit_V": 45.0,
+  "wILimit_A": 4.0,
+  "wV1LowLimit_V": 20.0,
+  "rTripped": false,
+  "rTripCode": 0,
+  "rTripReason": "none",
+  "rTripValue": 0.0
+ },
+ "expect": null
+}

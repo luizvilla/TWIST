@@ -394,76 +394,91 @@ then
   warn "The current loop would act on a wrong current. Calibrate I1_LOW (OwnTech data API calibration) and re-run."
   confirm "Continue anyway (not recommended)?" || exit 1
 fi
-note "More than 3 % between the board's reading and the meter fails L2-OV-01.s in the record."
+note "More than 3 % between the board's reading and the meter fails L2-SEN-01 in the record."
 
 # ── 7 ─────────────────────────────────────────────────────────────────────
 stage "Guard limits and current direction (0.2 A)"
-say "Bench guard: leg off, latched, if VHigh > 45 V, |I1_LOW| > 4 A or LOW1 > 20 V (every 100 us)."
-note "The current guard checks single samples: it needs room for about 0.6 A of inductor ripple and sample glitches"
-note "(session 2026-11-23: two false trips at 2.5 A with 1.25 A flowing)."
-ctl set Converter/wOvLimit_V 45
-ctl set Converter/wILimit_A 4.0
-ctl set Converter/wV1LowLimit_V 20
-ctl set Converter/wClear 1
-ctl set Converter/wCurrentRef_A -0.2
-confirm "Start CURRENT mode at -0.2 A (power from LOW1 into VHigh)?" || { idle; exit 1; }
-ctl fwscope-arm >/dev/null
-ctl set Converter/Mode 1
-ctl settle direction_check --seconds 1.5 --session "$SESSION"
-if ctl read | grep -q '"rTripped": true'; then
-  idle
-  ctl fwscope-read --session "$SESSION" --name direction_check || true
-  warn "The bench guard stopped the leg during the direction check: see Converter/rTripReason above."
-  warn "The start-up is recorded in $SESSION/fwscope/direction_check.json. Stopped: do not go on until it is understood."
-  exit 1
+if [[ -z "${RUN_OV:-}" ]]; then
+  if confirm "Run the VHigh tests L2-OV-01 and L2-OV-02 in this session? (No: go straight to the duty step)"; then RUN_OV=yes; else RUN_OV=no; fi
 fi
-say "I1_LOW should read about -0.2 A, and the low-side supply should show it is delivering current"
-say "(about 0.1 to 0.2 A). If instead LOW1 rises or the supply shows nothing, the current sign is reversed."
-if ! confirm "Low-side supply delivering current, and I1_LOW about -0.2 A?"; then
-  idle; warn "Direction check failed: stopped. Check the I1_LOW sign before going on."; exit 1
+if [[ "$RUN_OV" == "yes" ]]; then
+  say "Bench guard: leg off, latched, if VHigh > 45 V, |I1_LOW| > 4 A or LOW1 > 20 V (every 100 us)."
+  note "The current guard checks single samples: it needs room for about 0.6 A of inductor ripple and sample glitches"
+  note "(session 2026-11-23: two false trips at 2.5 A with 1.25 A flowing)."
+  ctl set Converter/wOvLimit_V 45
+  ctl set Converter/wILimit_A 4.0
+  ctl set Converter/wV1LowLimit_V 20
+  ctl set Converter/wClear 1
+  ctl set Converter/wCurrentRef_A -0.2
+  confirm "Start CURRENT mode at -0.2 A (power from LOW1 into VHigh)?" || { idle; exit 1; }
+  ctl fwscope-arm >/dev/null
+  ctl set Converter/Mode 1
+  ctl settle direction_check --seconds 1.5 --session "$SESSION"
+  if ctl read | grep -q '"rTripped": true'; then
+    idle
+    ctl fwscope-read --session "$SESSION" --name direction_check || true
+    warn "The bench guard stopped the leg during the direction check: see Converter/rTripReason above."
+    warn "The start-up is recorded in $SESSION/fwscope/direction_check.json. Stopped: do not go on until it is understood."
+    exit 1
+  fi
+  say "I1_LOW should read about -0.2 A, and the low-side supply should show it is delivering current"
+  say "(about 0.1 to 0.2 A). If instead LOW1 rises or the supply shows nothing, the current sign is reversed."
+  if ! confirm "Low-side supply delivering current, and I1_LOW about -0.2 A?"; then
+    idle; warn "Direction check failed: stopped. Check the I1_LOW sign before going on."; exit 1
+  fi
+else
+  note "Skipped in this session."
 fi
 
 # ── 8 ─────────────────────────────────────────────────────────────────────
 stage "L2-OV-01: current steps into VHigh"
-say "Four steps of the reference. At each one VHigh settles where the bleed burns what is injected."
-say "Expected: 32 V at 0.5 A (the supply holds it), then about 34.5 V at 1.0 A, 38.6 V at 1.25 A and 42.2 V at 1.5 A."
-warn "Check the 12 V supply's current limit is 3 A: at 1.5 A into VHigh it delivers about 2 A, and 2.6 A in L2-OV-02."
-note "In current limit LOW1 sags, the leg gets less power, and VHigh stays low: the step is then not judged."
-confirm "Run the four steps (about 15 s in total)?" || { idle; exit 1; }
-for I in 0.50 1.00 1.25 1.50; do
-  ctl set Converter/wCurrentRef_A "-$I" >/dev/null
-  printf '  %s%s A:%s ' "$BOLD" "$I" "$RESET"
-  ctl settle "ov01_${I}A" --seconds 2.5 --session "$SESSION"
-  if ctl read | grep -q '"rTripped": true'; then warn "guard tripped at $I A: see Converter/rTripReason"; break; fi
-done
-mso mso-arm --session "$SESSION" --preset ov --auto
-mso mso-wait --timeout 15
-mso mso-capture --session "$SESSION" --name ov01_1.50A
-ctl set Converter/wCurrentRef_A 0 >/dev/null
-sleep 1
-idle
-say "VHigh above 32 V from 1.0 A is F-1 on the board: the supply cannot take the power back."
+if [[ "$RUN_OV" == "yes" ]]; then
+  say "Four steps of the reference. At each one VHigh settles where the bleed burns what is injected."
+  say "Expected: 32 V at 0.5 A (the supply holds it), then about 34.5 V at 1.0 A, 38.6 V at 1.25 A and 42.2 V at 1.5 A."
+  warn "Check the 12 V supply's current limit is 3 A: at 1.5 A into VHigh it delivers about 2 A, and 2.6 A in L2-OV-02."
+  note "In current limit LOW1 sags, the leg gets less power, and VHigh stays low: the step is then not judged."
+  confirm "Run the four steps (about 15 s in total)?" || { idle; exit 1; }
+  for I in 0.50 1.00 1.25 1.50; do
+    ctl set Converter/wCurrentRef_A "-$I" >/dev/null
+    printf '  %s%s A:%s ' "$BOLD" "$I" "$RESET"
+    ctl settle "ov01_${I}A" --seconds 2.5 --session "$SESSION"
+    if ctl read | grep -q '"rTripped": true'; then warn "guard tripped at $I A: see Converter/rTripReason"; break; fi
+  done
+  mso mso-arm --session "$SESSION" --preset ov --auto
+  mso mso-wait --timeout 15
+  mso mso-capture --session "$SESSION" --name ov01_1.50A
+  ctl set Converter/wCurrentRef_A 0 >/dev/null
+  sleep 1
+  idle
+  say "VHigh above 32 V from 1.0 A is F-1 on the board: the supply cannot take the power back."
+else
+  note "Skipped in this session."
+fi
 
 # ── 9 ─────────────────────────────────────────────────────────────────────
 stage "L2-OV-02: the guard stops the leg at 45 V"
-say "2.0 A would settle VHigh at about 48.7 V. The guard must open the leg at 45 V,"
-say "then the bleed brings VHigh back to 32 V."
-ctl set Converter/wClear 1 >/dev/null
-ctl set Converter/wCurrentRef_A -1.25 >/dev/null
-confirm "Start at 1.25 A, then step to 2.0 A until the guard stops the leg?" || { idle; exit 1; }
-ctl set Converter/Mode 1 >/dev/null
-sleep 2
-ctl fwscope-arm
-mso mso-arm --session "$SESSION" --preset ov --source vhigh --level 43 --hscale 0.05 --hpos 30
-ctl set Converter/wCurrentRef_A -2.0 >/dev/null
-ctl wait-trip --timeout 5 --session "$SESSION" --name ov02_trip || { idle; warn "no trip within 5 s: stopped by hand"; }
-ctl settle ov02_after --seconds 2 --session "$SESSION"
-ctl fwscope-read --session "$SESSION" --name ov02 || warn "firmware scope not read"
-mso mso-wait --timeout 5
-mso mso-capture --session "$SESSION" --name ov02
-ctl set Converter/wCurrentRef_A 0 >/dev/null
-ctl set Converter/wClear 1 >/dev/null
-idle
+if [[ "$RUN_OV" == "yes" ]]; then
+  say "2.0 A would settle VHigh at about 48.7 V. The guard must open the leg at 45 V,"
+  say "then the bleed brings VHigh back to 32 V."
+  ctl set Converter/wClear 1 >/dev/null
+  ctl set Converter/wCurrentRef_A -1.25 >/dev/null
+  confirm "Start at 1.25 A, then step to 2.0 A until the guard stops the leg?" || { idle; exit 1; }
+  ctl set Converter/Mode 1 >/dev/null
+  sleep 2
+  ctl fwscope-arm
+  mso mso-arm --session "$SESSION" --preset ov --source vhigh --level 43 --hscale 0.05 --hpos 30
+  ctl set Converter/wCurrentRef_A -2.0 >/dev/null
+  ctl wait-trip --timeout 5 --session "$SESSION" --name ov02_trip || { idle; warn "no trip within 5 s: stopped by hand"; }
+  ctl settle ov02_after --seconds 2 --session "$SESSION"
+  ctl fwscope-read --session "$SESSION" --name ov02 || warn "firmware scope not read"
+  mso mso-wait --timeout 5
+  mso mso-capture --session "$SESSION" --name ov02
+  ctl set Converter/wCurrentRef_A 0 >/dev/null
+  ctl set Converter/wClear 1 >/dev/null
+  idle
+else
+  note "Skipped in this session."
+fi
 
 # ── 10 ────────────────────────────────────────────────────────────────────
 stage "Rewire for L2-STP-01 (all supplies OFF)"
@@ -493,6 +508,11 @@ ctl set Converter/wClear 1 >/dev/null
 confirm "Start STEP mode at duty 0.4 (LOW1 about 12 V into 10 ohm)?" || { idle; exit 1; }
 ctl set Converter/Mode 2 >/dev/null
 ctl settle stp_before --seconds 1.5 --session "$SESSION"
+if ctl read | grep -q '"rTripped": true'; then
+  idle
+  warn "The bench guard stopped the leg before the step: see Converter/rTripReason above. Stopped."
+  exit 1
+fi
 ctl fwscope-arm
 mso mso-arm --session "$SESSION" --preset stp --source il --level 1.35
 confirm "Step the duty to 0.5 (expected peak about 5.2 A)?" || { idle; exit 1; }

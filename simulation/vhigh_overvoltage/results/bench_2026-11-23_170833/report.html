@@ -43,9 +43,9 @@ table.kv td:first-child{width:200px;color:var(--ink2)} .check li{margin:4px 0} c
 <tr><td>NOTES</td><td>none</td></tr>
 <tr><td>SESSION_ENDED</td><td>2026-11-23T17:22:52+01:00</td></tr>
 </table></div><h3>2 · Results</h3><table><tr><th>Criterion</th><th>What is checked</th><th>Verdict</th><th>Limit</th><th>Measured</th></tr>
-<tr id="L2-OV-01"><td>L2-OV-01.sV_HIGH</td><td>V_HIGH sensor against the supply display</td><td><span class="badge pass">✓ PASS</span></td><td>|error| &lt;= 3 %</td><td>30.97 V vs 31.19 V (-0.7 %)</td></tr>
-<tr><td>L2-OV-01.sV1_LOW</td><td>V1_LOW sensor against the supply display</td><td><span class="badge fail new">✗ FAIL NEW</span></td><td>|error| &lt;= 3 %</td><td>12.47 V vs 11.98 V (+4.1 %)</td></tr>
-<tr><td>L2-OV-01.a</td><td>Step 0.50A not judged: the bench guard had stopped the leg</td><td><span class="badge info">i INFO</span></td><td></td><td>V1_LOW above wV1LowLimit_V (20.101)</td></tr>
+<tr id="L2-SEN-01"><td>L2-SEN-01.V_HIGH</td><td>V_HIGH sensor against the meter at the board terminals</td><td><span class="badge pass">✓ PASS</span></td><td>|error| &lt;= 3 %</td><td>30.97 V vs 31.19 V (-0.7 %)</td></tr>
+<tr><td>L2-SEN-01.V1_LOW</td><td>V1_LOW sensor against the meter at the board terminals</td><td><span class="badge fail new">✗ FAIL NEW</span></td><td>|error| &lt;= 3 %</td><td>12.47 V vs 11.98 V (+4.1 %)</td></tr>
+<tr id="L2-OV-01"><td>L2-OV-01.a</td><td>Step 0.50A not judged: the bench guard had stopped the leg</td><td><span class="badge info">i INFO</span></td><td></td><td>V1_LOW above wV1LowLimit_V (20.101)</td></tr>
 <tr id="L2-OV-02"><td>L2-OV-02.a</td><td>The bench guard stops the leg on V_HIGH at its 45 V limit</td><td><span class="badge fail new">✗ FAIL NEW</span></td><td>43 to 47 V, reason V_HIGH</td><td>20.06 V, &quot;V1_LOW above wV1LowLimit_V&quot;</td></tr>
 <tr><td>L2-OV-02.b</td><td>After the stop VHigh falls back to the supply through the bleed</td><td><span class="badge pass">✓ PASS</span></td><td>&lt; 34 V</td><td>31.08 V</td></tr>
 <tr id="L2-STP-01"><td>L2-STP-01.a</td><td>Peak I1_LOW after the 0.4 to 0.5 step, firmware scope only (100 us per sample: the 280 us ringing is undersampled, so the true peak is higher). Redo with the MSO54 for a verdict</td><td><span class="badge info">i INFO</span></td><td>model 5.17 A</td><td>1.58 A seen at 100 us</td></tr>

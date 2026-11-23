@@ -1,5 +1,5 @@
-@@	L2-OV-01.sV_HIGH	FAIL	V_HIGH sensor against the supply display	|error| <= 3 %	29.20 V vs 31.14 V (-6.2 %)
-@@	L2-OV-01.sV1_LOW	FAIL	V1_LOW sensor against the supply display	|error| <= 3 %	12.49 V vs 12.00 V (+4.1 %)
+@@	L2-SEN-01.V_HIGH	FAIL	V_HIGH sensor against the meter at the board terminals	|error| <= 3 %	29.20 V vs 31.14 V (-6.2 %)
+@@	L2-SEN-01.V1_LOW	FAIL	V1_LOW sensor against the meter at the board terminals	|error| <= 3 %	12.49 V vs 12.00 V (+4.1 %)
 @@	L2-OV-01.a	PASS	Settled VHigh at 0.50A into VHigh within 5 % of D-L2P-01	31.1 V +/- 5 %	31.29 V (+0.5 %), I1 -0.495 A
 @@	L2-OV-01.b	FAIL	Settled VHigh at 1.00A into VHigh within 5 % of D-L2P-02	34.5 V +/- 5 %	32.77 V (-5.1 %), I1 -1.176 A
 @@	L2-OV-01.c	FAIL	Settled VHigh at 1.25A into VHigh within 5 % of D-L2P-03	38.6 V +/- 5 %	35.93 V (-6.9 %), I1 -1.392 A

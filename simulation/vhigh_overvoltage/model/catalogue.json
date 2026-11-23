@@ -550,6 +550,14 @@
       }
     },
     {
+      "id": "L2-SEN-01",
+      "tab": "bench",
+      "level": "L2",
+      "status": "implemented",
+      "title": "Board sensors V_HIGH and V1_LOW against a meter at the board terminals, PWM off",
+      "purpose": "Every session starts with it (stage 6). It catches a supply left at another set point and the sensor gain errors: V1_LOW reads about 4 % high on the bench board, which is what made the first current loop run away."
+    },
+    {
       "id": "L2-OV-01",
       "tab": "bench",
       "level": "L2",

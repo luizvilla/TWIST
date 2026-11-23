@@ -1,0 +1,14 @@
+@@	L2-SEN-01.V_HIGH	FAIL	V_HIGH sensor against the meter at the board terminals	|error| <= 3 %	29.26 V vs 32.00 V (-8.6 %)
+@@	L2-SEN-01.V1_LOW	FAIL	V1_LOW sensor against the meter at the board terminals	|error| <= 3 %	12.43 V vs 12.00 V (+3.6 %)
+@@	L2-OV-01.a	FAIL	Settled VHigh at 0.50A into VHigh within 5 % of D-L2P-01	32.0 V +/- 5 %	29.29 V (-8.5 %), I1 -0.474 A
+@@	L2-OV-01.b	FAIL	Settled VHigh at 1.00A into VHigh within 5 % of D-L2P-02	34.5 V +/- 5 %	31.79 V (-8.0 %), I1 -0.937 A
+@@	L2-OV-01.c	FAIL	Settled VHigh at 1.25A into VHigh within 5 % of D-L2P-03	38.6 V +/- 5 %	35.95 V (-6.8 %), I1 -1.244 A
+@@	L2-OV-01.d	FAIL	Settled VHigh at 1.50A into VHigh within 5 % of D-L2P-04	42.2 V +/- 5 %	39.67 V (-6.1 %), I1 -1.503 A
+@@	L2-OV-01.e	PASS	F-1 on the board: with 1 A or more pushed into VHigh, VHigh settles above the supply set point (supply still connected)	> 33.00 V (set point at the board + 1 V)	39.67 V at 1.50A (+7.67 V)
+@@	L2-OV-01.g	INFO	Power balance above the set point: LOW1 power taken by the leg against the power in the bleed. The difference is the converter losses and the Feeder load on VHigh, which the model leaves out		1.25A: 15.1 W in, 12.9 W in the bleed (85 %); 1.50A: 18.3 W in, 15.7 W in the bleed (86 %)
+@@	L2-OV-01.h	INFO	Bleed current probe at 1.5 A: the energy pushed into VHigh ends in the bleed		0.379 A x 100 ohm = 37.87 V against VHigh 39.43 V; 14.9 W in the bleed
+@@	L2-OV-01.f	INFO	VHigh just before the L2-OV-02 stop, from the firmware scope (supply still connected)		44.97 V with -1.91 A applied (set point 32.00 V)
+@@	L2-OV-02.a	PASS	The bench guard stops the leg on V_HIGH at its 45 V limit	43 to 47 V, reason V_HIGH	45.06 V, "V_HIGH above wOvLimit_V"
+@@	L2-OV-02.b	PASS	After the stop VHigh falls back to the supply through the bleed	< 35 V	29.23 V
+@@	L2-OV-02.c	INFO	VHigh rise seen by the firmware scope		28.8 to 45.1 V over 102 ms
+@@	L2-STP-01.a	INFO	Peak I1_LOW after the 0.4 to 0.5 step, firmware scope only (100 us per sample: the 280 us ringing is undersampled, so the true peak is higher). Redo with the MSO54 for a verdict	model 5.17 A	0.18 A seen at 100 us
