@@ -119,19 +119,20 @@ The 105 V peaks in the safe cases are the 100 V bus plus the 5 V turn-off spike 
 All three run in one session through [`bench/bench_wizard.sh`](bench/bench_wizard.sh). The setup, the code and the reasons behind them are in [`bench/README.md`](bench/README.md).
 
 - **Firmware:** `~/code/examples`, branch `vhigh-investigation`, `TWIST/DC_DC/vhigh_investigation/`, built with Core `main`. The Core2 safety API is not used because it is still experimental.
-- **Bench guard:** the firmware opens the leg at 80 V, 2 A, or LOW1 above 30 V. It checks every 100 µs and stays latched.
-- **Bleed resistor:** a 200 Ω resistor across VHigh makes every overvoltage test limit itself.
+- **Bench guard:** the firmware opens the leg at 45 V, 2.5 A, or LOW1 above 20 V. It checks every 100 µs and stays latched.
+- **Bleed resistor:** a 100 Ω resistor across VHigh makes every overvoltage test limit itself.
+- **Voltages:** 32 V on VHigh and 12 V on LOW1, the supplies available (first planned at 60 V and 24 V).
 
 Each result is compared with a model prediction of the exact bench setup (cases D-L2P-01..06):
 
 - [ ] **L2-OV-01: confirm hypothesis 1 without any disconnect.**
-  - Setup: lab supply at 60 V on VHigh, 24 V supply (2 A limit) on LOW1.
-  - Push 0.5, 0.75, 1.0 and 1.15 A into VHigh.
-  - Predicted: VHigh settles at 60, 60, 69.2 and 74.2 V.
-  - Confirmed if VHigh rises above 63 V at 1.0 A.
-- [ ] **L2-OV-02: the guard stops a rising VHigh at 80 V.**
-  - 1.5 A would settle at about 85 V.
-  - Predicted: the guard opens the leg at 80 V, and the bleed brings VHigh back to 60 V.
+  - Setup: lab supply at 32 V on VHigh, 12 V supply (3 A limit) on LOW1.
+  - Push 0.5, 1.0, 1.25 and 1.5 A into VHigh.
+  - Predicted: VHigh settles at 32.0, 34.5, 38.6 and 42.2 V.
+  - Confirmed if VHigh rises above 35 V at 1.25 A.
+- [ ] **L2-OV-02: the guard stops a rising VHigh at 45 V.**
+  - 2.0 A would settle at about 48.7 V.
+  - Predicted: the guard opens the leg at 45 V, and the bleed brings VHigh back to 32 V.
 - [ ] **L2-STP-01: confirm hypothesis 3 at low energy.**
   - VHigh at 30 V, 10 Ω on LOW1, duty step 0.4 → 0.5, current probe on L201.
   - Predicted peak: 5.2 A.

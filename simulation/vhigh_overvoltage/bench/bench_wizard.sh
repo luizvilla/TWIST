@@ -235,9 +235,9 @@ p = json.loads(subprocess.run([sys.executable, sys.argv[1], 'predictions'], capt
 need = ['D-L2P-01', 'D-L2P-02', 'D-L2P-03', 'D-L2P-04', 'D-L2P-05', 'D-L2P-06']
 missing = [k for k in need if k not in p]
 if missing: sys.exit(f'missing {missing}')
-for k, txt in zip(need, ['0.50 A, settled VHigh', '0.75 A, settled VHigh', '1.00 A, settled VHigh', '1.15 A, settled VHigh']):
+for k, txt in zip(need, ['0.50 A, settled VHigh', '1.00 A, settled VHigh', '1.25 A, settled VHigh', '1.50 A, settled VHigh']):
     print(f'    {k}  {txt}: {p[k]["vH_end"]:.1f} V')
-print(f'    D-L2P-05  1.5 A: guard stop at 80 V, {p["D-L2P-05"]["trip_t"]*1e3:.0f} ms after the step, then back to {p["D-L2P-05"]["vH_end"]:.1f} V')
+print(f'    D-L2P-05  2.0 A: guard stop at 45 V, {p["D-L2P-05"]["trip_t"]*1e3:.0f} ms after the step, then back to {p["D-L2P-05"]["vH_end"]:.1f} V')
 print(f'    D-L2P-06  duty step 0.4 -> 0.5 at 30 V: peak iL {p["D-L2P-06"]["iL_pk"]:.2f} A')
 print(f'    (campaign {p["D-L2P-01"]["campaign"]})')
 EOF
@@ -306,9 +306,9 @@ idle
 
 # ── 4 ─────────────────────────────────────────────────────────────────────
 stage "Wiring for L2-OV-01 and L2-OV-02 (all supplies OFF)"
-step "VHigh supply: set 60.0 V, current limit 1.0 A, output OFF; + on VHigh, - on GND."
-step "Bleed resistor 200 ohm / 30 W or more across VHigh and GND, on a heat-safe surface."
-step "Low-side supply: set 24.0 V, current limit 2.0 A, output OFF; + on LOW1, - on GND."
+step "VHigh supply: set 32.0 V, current limit 1.0 A, output OFF; + on VHigh, - on GND."
+step "Bleed resistor 100 ohm / 30 W or more across VHigh and GND, on a heat-safe surface (it dissipates up to about 20 W)."
+step "Low-side supply: set 12.0 V, current limit 3.0 A, output OFF; + on LOW1, - on GND."
 step "Nothing on LOW2. Leg 2 stays off in this firmware."
 step "Measure the bleed resistor with a multimeter, out of circuit or with everything off."
 warn "With a lab supply on VHigh, VHigh can only fall through the bleed resistor. Keep it connected."
@@ -318,8 +318,8 @@ pause "Wired as above, all outputs still OFF? Press Enter"
 
 # ── 5 ─────────────────────────────────────────────────────────────────────
 stage "MSO54 setup"
-step "CH1: differential probe on VHigh to GND, 10 V/div, offset 60 V."
-step "CH2: probe on LOW1 to GND, 10 V/div."
+step "CH1: differential probe on VHigh to GND, 5 V/div, offset 32 V."
+step "CH2: probe on LOW1 to GND, 5 V/div."
 step "CH3: current probe on the wire from LOW1 to the low-side supply, arrow towards LOW1 (+ = buck), degauss, 1 A/div."
 step "CH4 (optional): switch node of leg 1, high-voltage passive probe, ground on GND."
 step "Horizontal 200 ms/div, acquisition Hi Res, scope in RUN."
@@ -331,8 +331,8 @@ pause "Scope set? Press Enter to test the USB link with a capture"
 
 # ── 6 ─────────────────────────────────────────────────────────────────────
 stage "Power-up and sensor check"
-step "VHigh supply output ON (60 V). The bleed draws about 0.3 A."
-step "Low-side supply output ON (24 V). It should deliver almost nothing."
+step "VHigh supply output ON (32 V). The bleed draws about 0.32 A."
+step "Low-side supply output ON (12 V). It should deliver almost nothing."
 pause "Both supplies ON? Press Enter to read the board's sensors"
 ctl settle sensor_check --seconds 1 --session "$SESSION"
 say "Now read the voltages at the board terminals with a multimeter, or from the supply displays."
@@ -356,10 +356,10 @@ note "More than 3 % between the board's reading and the meter fails L2-OV-01.s i
 
 # ── 7 ─────────────────────────────────────────────────────────────────────
 stage "Guard limits and current direction (0.2 A)"
-say "Bench guard: leg off, latched, if VHigh > 80 V, |I1_LOW| > 2 A or LOW1 > 30 V (every 100 us)."
-ctl set Converter/wOvLimit_V 80
-ctl set Converter/wILimit_A 2.0
-ctl set Converter/wV1LowLimit_V 30
+say "Bench guard: leg off, latched, if VHigh > 45 V, |I1_LOW| > 2.5 A or LOW1 > 20 V (every 100 us)."
+ctl set Converter/wOvLimit_V 45
+ctl set Converter/wILimit_A 2.5
+ctl set Converter/wV1LowLimit_V 20
 ctl set Converter/wClear 1
 ctl set Converter/wCurrentRef_A -0.2
 confirm "Start CURRENT mode at -0.2 A (power from LOW1 into VHigh)?" || { idle; exit 1; }
@@ -374,34 +374,34 @@ fi
 # ── 8 ─────────────────────────────────────────────────────────────────────
 stage "L2-OV-01: current steps into VHigh"
 say "Four steps of the reference. At each one VHigh settles where the bleed burns what is injected."
-say "Expected: 60 V at 0.5 and 0.75 A, then about 69 V at 1.0 A and 74 V at 1.15 A."
+say "Expected: 32 V at 0.5 A (the supply holds it), then about 34.5 V at 1.0 A, 38.6 V at 1.25 A and 42.2 V at 1.5 A."
 confirm "Run the four steps (about 15 s in total)?" || { idle; exit 1; }
-for I in 0.50 0.75 1.00 1.15; do
+for I in 0.50 1.00 1.25 1.50; do
   ctl set Converter/wCurrentRef_A "-$I" >/dev/null
   printf '  %s%s A:%s ' "$BOLD" "$I" "$RESET"
   ctl settle "ov01_${I}A" --seconds 2.5 --session "$SESSION"
   if ctl read | grep -q '"rTripped": true'; then warn "guard tripped at $I A: see Converter/rTripReason"; break; fi
 done
-"$PY" "$CTL" mso-capture --session "$SESSION" --name ov01_1.15A || true
+"$PY" "$CTL" mso-capture --session "$SESSION" --name ov01_1.50A || true
 ctl set Converter/wCurrentRef_A 0 >/dev/null
 sleep 1
 idle
-say "VHigh above 60 V at 1.0 A is F-1 on the board: the supply cannot take the power back."
+say "VHigh above 32 V from 1.0 A is F-1 on the board: the supply cannot take the power back."
 
 # ── 9 ─────────────────────────────────────────────────────────────────────
-stage "L2-OV-02: the guard stops the leg at 80 V"
-say "1.5 A would settle VHigh at about 85 V. The guard must open the leg at 80 V,"
-say "then the bleed brings VHigh back to 60 V."
-step "MSO54: trigger CH1 rising edge at 76 V, normal mode, single sequence; horizontal 200 ms/div."
+stage "L2-OV-02: the guard stops the leg at 45 V"
+say "2.0 A would settle VHigh at about 48.7 V. The guard must open the leg at 45 V,"
+say "then the bleed brings VHigh back to 32 V."
+step "MSO54: trigger CH1 rising edge at 43 V, normal mode, single sequence; horizontal 200 ms/div."
 pause "Scope set? Press Enter"
 ctl set Converter/wClear 1 >/dev/null
-ctl set Converter/wCurrentRef_A -1.0 >/dev/null
-confirm "Start at 1.0 A, then step to 1.5 A until the guard stops the leg?" || { idle; exit 1; }
+ctl set Converter/wCurrentRef_A -1.25 >/dev/null
+confirm "Start at 1.25 A, then step to 2.0 A until the guard stops the leg?" || { idle; exit 1; }
 ctl set Converter/Mode 1 >/dev/null
 sleep 2
 ctl fwscope-arm
 "$PY" "$CTL" mso-arm || true
-ctl set Converter/wCurrentRef_A -1.5 >/dev/null
+ctl set Converter/wCurrentRef_A -2.0 >/dev/null
 ctl wait-trip --timeout 5 --session "$SESSION" --name ov02_trip || { idle; warn "no trip within 5 s: stopped by hand"; }
 ctl settle ov02_after --seconds 2 --session "$SESSION"
 ctl fwscope-read --session "$SESSION" --name ov02 || warn "firmware scope not read"

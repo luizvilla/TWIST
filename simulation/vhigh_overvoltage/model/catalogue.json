@@ -427,20 +427,20 @@
       "tab": "bench",
       "level": "D",
       "status": "implemented",
-      "title": "Prediction for L2-OV-01: 0.5 A into VHigh, 60 V supply, 200 ohm bleed",
-      "purpose": "The bench setup of L2-OV-01: low-side supply 24 V, VHigh lab supply 60 V (cannot sink), 200 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -0.5 A. Above 0.75 A the injected power exceeds what the resistor draws at 60 V, so VHigh settles above the set point at about sqrt(P*R).",
+      "title": "Prediction for L2-OV-01: 0.5 A into VHigh, 32 V supply, 100 ohm bleed",
+      "purpose": "The bench setup of L2-OV-01: low-side supply 12 V, VHigh lab supply 32 V (cannot sink), 100 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -0.5 A. Above 0.85 A the injected power exceeds what the resistor draws at 32 V, so VHigh settles above the set point at about sqrt(P*R).",
       "params": {
         "mode": "current",
         "low": "battery",
-        "V_low": 24,
+        "V_low": 12,
         "R_low": 0.05,
-        "Vs": 60,
+        "Vs": 32,
         "C_H": 0.000276,
         "dt": 2e-07,
         "t_end": 0.3,
         "rec_every": 250,
         "I_ref": -0.5,
-        "R_bleed": 200
+        "R_bleed": 100
       }
     },
     {
@@ -448,20 +448,20 @@
       "tab": "bench",
       "level": "D",
       "status": "implemented",
-      "title": "Prediction for L2-OV-01: 0.75 A into VHigh, 60 V supply, 200 ohm bleed",
-      "purpose": "The bench setup of L2-OV-01: low-side supply 24 V, VHigh lab supply 60 V (cannot sink), 200 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -0.75 A. Above 0.75 A the injected power exceeds what the resistor draws at 60 V, so VHigh settles above the set point at about sqrt(P*R).",
+      "title": "Prediction for L2-OV-01: 1 A into VHigh, 32 V supply, 100 ohm bleed",
+      "purpose": "The bench setup of L2-OV-01: low-side supply 12 V, VHigh lab supply 32 V (cannot sink), 100 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -1 A. Above 0.85 A the injected power exceeds what the resistor draws at 32 V, so VHigh settles above the set point at about sqrt(P*R).",
       "params": {
         "mode": "current",
         "low": "battery",
-        "V_low": 24,
+        "V_low": 12,
         "R_low": 0.05,
-        "Vs": 60,
+        "Vs": 32,
         "C_H": 0.000276,
         "dt": 2e-07,
         "t_end": 0.3,
         "rec_every": 250,
-        "I_ref": -0.75,
-        "R_bleed": 200
+        "I_ref": -1.0,
+        "R_bleed": 100
       }
     },
     {
@@ -469,20 +469,20 @@
       "tab": "bench",
       "level": "D",
       "status": "implemented",
-      "title": "Prediction for L2-OV-01: 1 A into VHigh, 60 V supply, 200 ohm bleed",
-      "purpose": "The bench setup of L2-OV-01: low-side supply 24 V, VHigh lab supply 60 V (cannot sink), 200 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -1 A. Above 0.75 A the injected power exceeds what the resistor draws at 60 V, so VHigh settles above the set point at about sqrt(P*R).",
+      "title": "Prediction for L2-OV-01: 1.25 A into VHigh, 32 V supply, 100 ohm bleed",
+      "purpose": "The bench setup of L2-OV-01: low-side supply 12 V, VHigh lab supply 32 V (cannot sink), 100 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -1.25 A. Above 0.85 A the injected power exceeds what the resistor draws at 32 V, so VHigh settles above the set point at about sqrt(P*R).",
       "params": {
         "mode": "current",
         "low": "battery",
-        "V_low": 24,
+        "V_low": 12,
         "R_low": 0.05,
-        "Vs": 60,
+        "Vs": 32,
         "C_H": 0.000276,
         "dt": 2e-07,
         "t_end": 0.3,
         "rec_every": 250,
-        "I_ref": -1.0,
-        "R_bleed": 200
+        "I_ref": -1.25,
+        "R_bleed": 100
       }
     },
     {
@@ -490,20 +490,20 @@
       "tab": "bench",
       "level": "D",
       "status": "implemented",
-      "title": "Prediction for L2-OV-01: 1.15 A into VHigh, 60 V supply, 200 ohm bleed",
-      "purpose": "The bench setup of L2-OV-01: low-side supply 24 V, VHigh lab supply 60 V (cannot sink), 200 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -1.15 A. Above 0.75 A the injected power exceeds what the resistor draws at 60 V, so VHigh settles above the set point at about sqrt(P*R).",
+      "title": "Prediction for L2-OV-01: 1.5 A into VHigh, 32 V supply, 100 ohm bleed",
+      "purpose": "The bench setup of L2-OV-01: low-side supply 12 V, VHigh lab supply 32 V (cannot sink), 100 ohm across VHigh, both legs' VHigh capacitors (276 uF). Current reference -1.5 A. Above 0.85 A the injected power exceeds what the resistor draws at 32 V, so VHigh settles above the set point at about sqrt(P*R).",
       "params": {
         "mode": "current",
         "low": "battery",
-        "V_low": 24,
+        "V_low": 12,
         "R_low": 0.05,
-        "Vs": 60,
+        "Vs": 32,
         "C_H": 0.000276,
         "dt": 2e-07,
         "t_end": 0.3,
         "rec_every": 250,
-        "I_ref": -1.15,
-        "R_bleed": 200
+        "I_ref": -1.5,
+        "R_bleed": 100
       }
     },
     {
@@ -511,22 +511,22 @@
       "tab": "bench",
       "level": "D",
       "status": "implemented",
-      "title": "Prediction for L2-OV-02: 1.5 A into VHigh with the 200 ohm bleed, firmware stop at 80 V",
-      "purpose": "At 1.5 A the injected power (36 W) would settle VHigh at about 85 V: the example's software stop (100 us control task) opens the leg at 80 V, then the bleed resistor brings VHigh back to the 60 V supply. Keeping the resistor means no charged capacitor is left at 80 V after the test.",
+      "title": "Prediction for L2-OV-02: 2.0 A into VHigh with the 100 ohm bleed, firmware stop at 45 V",
+      "purpose": "At 2.0 A the injected power (24 W) would settle VHigh at about 48.7 V: the example's software stop (100 us control task) opens the leg at 45 V, then the bleed resistor brings VHigh back to the 32 V supply.",
       "params": {
         "mode": "current",
         "low": "battery",
-        "V_low": 24,
+        "V_low": 12,
         "R_low": 0.05,
-        "Vs": 60,
+        "Vs": 32,
         "C_H": 0.000276,
         "dt": 2e-07,
         "t_end": 0.3,
         "rec_every": 250,
-        "I_ref": -1.5,
-        "ov_trip": 80,
+        "I_ref": -2.0,
+        "ov_trip": 45,
         "trip_delay": 0.0001,
-        "R_bleed": 200
+        "R_bleed": 100
       }
     },
     {
@@ -554,8 +554,8 @@
       "tab": "bench",
       "level": "L2",
       "status": "implemented",
-      "title": "Boost 0.5 to 1.15 A into VHigh with the lab supply at 60 V and a 200 ohm bleed: VHigh settles above the set point",
-      "purpose": "Confirms F-1 on the board without any disconnect. 24 V supply (2 A limit) on LOW1, 200 ohm / 30 W across VHigh, MSO54 on VHigh, V1_low, iL, SW. Pass band: each settled VHigh within the D-L2P-01..04 prediction +/-5 %. Firmware: examples TWIST/DC_DC/vhigh_investigation, CURRENT mode."
+      "title": "Boost 0.5 to 1.5 A into VHigh with the lab supply at 32 V and a 100 ohm bleed: VHigh settles above the set point",
+      "purpose": "Confirms F-1 on the board without any disconnect. 12 V supply (3 A limit) on LOW1, 100 ohm / 30 W across VHigh, MSO54 on VHigh, V1_low, iL, SW. Pass band: each settled VHigh within the D-L2P-01..04 prediction +/-5 %. Firmware: examples TWIST/DC_DC/vhigh_investigation, CURRENT mode."
     },
     {
       "id": "L2-STP-01",
@@ -570,8 +570,8 @@
       "tab": "bench",
       "level": "L2",
       "status": "implemented",
-      "title": "1.5 A into VHigh with the bleed: VHigh rises from 60 V until the example's 80 V software stop opens the leg",
-      "purpose": "Measures the rise (compare with D-L2P-05) and checks the stop latches with its reason readable, then VHigh falls back to 60 V through the bleed. A test guard only, not the hardware fix."
+      "title": "2.0 A into VHigh with the bleed: VHigh rises from 32 V until the example's 45 V software stop opens the leg",
+      "purpose": "Measures the rise (compare with D-L2P-05) and checks the stop latches with its reason readable, then VHigh falls back to 32 V through the bleed. A test guard only, not the hardware fix."
     }
   ]
 }

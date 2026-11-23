@@ -223,7 +223,7 @@ def cmd_predictions(_a) -> None:
     print(json.dumps(predictions(), indent=1))
 
 
-OV01_STEPS = [('ov01_0.50A', 'D-L2P-01'), ('ov01_0.75A', 'D-L2P-02'), ('ov01_1.00A', 'D-L2P-03'), ('ov01_1.15A', 'D-L2P-04')]
+OV01_STEPS = [('ov01_0.50A', 'D-L2P-01'), ('ov01_1.00A', 'D-L2P-02'), ('ov01_1.25A', 'D-L2P-03'), ('ov01_1.50A', 'D-L2P-04')]
 
 
 def criteria(session: Path) -> list[dict]:
@@ -252,20 +252,22 @@ def criteria(session: Path) -> list[dict]:
             ok = abs(v - pv) <= 0.05 * pv
             row(f'L2-OV-01.{letter}', 'PASS' if ok else 'FAIL', f'Settled VHigh at {name[5:]} into VHigh within 5 % of {case}',
                 f'{pv:.1f} V +/- 5 %', f'{v:.2f} V ({(v - pv) / pv * 100:+.1f} %), I1 {steps[name]["mean"]["rI1Low_A"]:.3f} A')
-    if 'ov01_1.00A' in steps:
-        v = steps['ov01_1.00A']['mean']['rVHigh_V']
-        sp = float(env.get('VHIGH_PSU_V') or 60)
-        row('L2-OV-01.e', 'PASS' if v > sp + 3 else 'FAIL', 'F-1 on the board: with 1 A into VHigh, VHigh rises above the supply set point',
+    if 'ov01_1.25A' in steps:
+        v = steps['ov01_1.25A']['mean']['rVHigh_V']
+        sp = float(env.get('VHIGH_PSU_V') or 32)
+        row('L2-OV-01.e', 'PASS' if v > sp + 3 else 'FAIL', 'F-1 on the board: with 1.25 A into VHigh, VHigh rises above the supply set point',
             f'> {sp + 3:.0f} V', f'{v:.2f} V')
     if 'ov02_trip' in steps:
         t = steps['ov02_trip']['trip']
         val = float(t['rTripValue'])
-        row('L2-OV-02.a', 'PASS' if t['rTripCode'] in (1, '1') and 78 <= val <= 82 else 'FAIL',
-            'The bench guard stops the leg on V_HIGH at its 80 V limit', '78 to 82 V, reason V_HIGH', f'{val:.2f} V, "{t["rTripReason"]}"')
+        lim = float(t.get('wOvLimit_V') or 45)
+        row('L2-OV-02.a', 'PASS' if t['rTripCode'] in (1, '1') and lim - 2 <= val <= lim + 2 else 'FAIL',
+            f'The bench guard stops the leg on V_HIGH at its {lim:g} V limit', f'{lim - 2:g} to {lim + 2:g} V, reason V_HIGH', f'{val:.2f} V, "{t["rTripReason"]}"')
         if 'ov02_after' in steps:
             after = steps['ov02_after']['mean']['rVHigh_V']
-            row('L2-OV-02.b', 'PASS' if after < 65 else 'FAIL', 'After the stop VHigh falls back to the supply through the bleed',
-                '< 65 V', f'{after:.2f} V')
+            sp = float(env.get('VHIGH_PSU_V') or 32)
+            row('L2-OV-02.b', 'PASS' if after < sp + 3 else 'FAIL', 'After the stop VHigh falls back to the supply through the bleed',
+                f'< {sp + 3:.0f} V', f'{after:.2f} V')
     fw = session / 'fwscope' / 'ov02.json'
     if fw.exists():
         d = json.loads(fw.read_text()); vh = d['channels'].get('rVHigh_V', [])
@@ -323,7 +325,7 @@ def report(session: Path, rows: list[dict]) -> str:
         c = f.chart('V', 220)
         if 'rVHigh_V' in ch:
             f.line(c, 'VHigh (firmware, V)', t, ch['rVHigh_V'], rc.BLUE, 2.5)
-        c['hlines'] = [{'v': 80, 'color': rc.CRITICAL, 'dash': [6, 4]}]
+        c['hlines'] = [{'v': 45, 'color': rc.CRITICAL, 'dash': [6, 4]}]
         c['events'] = [{'t': 0, 'label': 'trigger'}]
         c2 = f.chart('A', 150)
         if 'rI1Low_A' in ch:
@@ -335,7 +337,7 @@ def report(session: Path, rows: list[dict]) -> str:
             f.line(c3, 'duty', t, ch['rDuty'], rc.GREEN, 1.5)
         p.append(f'<figure><div><b>Firmware scope: {e(fw.stem)}</b></div>{f.html("fw_" + fw.stem, "firmware scope " + fw.stem)}'
                  '<figcaption>Sampled every control period (100 us) by the example firmware; time 0 is the trigger (mode change, step or guard trip). '
-                 'Red dashed: the 80 V guard.</figcaption></figure>')
+                 'Red dashed: the 45 V guard.</figcaption></figure>')
         figs += 1
     for wf in sorted((session / 'scope').glob('*/waveforms.npz')) if (session / 'scope').exists() else []:
         import numpy as np
