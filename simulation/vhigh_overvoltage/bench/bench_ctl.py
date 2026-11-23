@@ -209,7 +209,7 @@ PRESETS = {  # role: (scale per div, centre offset), plus the timebase
 
 def roles(session: str | None) -> dict:
     env = parse_env(Path(session) / 'session.env') if session else {}
-    r = {'vhigh': env.get('CH_VHIGH', 'CH4'), 'vlow': env.get('CH_VLOW', 'CH1'), 'il': env.get('IL_CHANNEL', 'CH2'),
+    r = {'vhigh': env.get('CH_VHIGH', 'CH2'), 'vlow': env.get('CH_VLOW', 'CH1'), 'il': env.get('IL_CHANNEL', 'CH4'),
          'ibleed': env.get('CH_IBLEED', 'CH3')}
     return {k: v for k, v in r.items() if v and v != 'none'}
 

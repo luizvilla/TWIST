@@ -161,6 +161,7 @@ Same setup (31.14 V at the board, 12 V LOW1 supply, 100 Ω bleed, no oscilloscop
 ### Third bench session, 2026-11-23 ([report](results/bench_2026-11-23_170833/report.html)): not usable
 
 - **The MSO54 captured nothing.** Its USB link was out of step (a stale reply in its queue, then refused USB writes after an acquisition was stopped mid-run), so the wizard fell back to the firmware scope. The helper now arms the scope in single sequence on each test's edge, reads it only once it has stopped, and resets the USB link when the scope does not answer.
+- **Scope channels on this bench:** CH1 LOW1, CH2 VHigh, CH3 bleed current (current probe), CH4 TP203 (inductor current). These are the wizard's defaults.
 - **The leg tripped on LOW1 > 20 V at the direction check:** current flowed into the 12 V supply, with the duty following the feedforward V1_low / V_high up to 0.643. The same firmware had the direction right in the previous session; the new element was the probes, including one on TP203, the ADC input of I1_LOW. The wizard now records the start-up with the firmware scope and stops when the direction check trips.
 
 ### Firmware: Core2 safety API
