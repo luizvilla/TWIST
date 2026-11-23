@@ -189,6 +189,15 @@ Firmware with the frozen-V1 feedforward (examples `6290f81`), MSO54 armed by the
 - **L2-OV-02 passed:** VHigh rose from 28.8 V, the guard opened the leg at 45.06 V on V_HIGH, and the bleed brought VHigh back to 29.2 V. The MSO54 caught it on its 43 V trigger.
 - **L2-STP-01 did not run:** entering STEP mode jumped to duty 0.4 into a LOW1 discharged by its 10 Ω load, which rang the tank to the 6.5 A current guard before any step. Fixed in the firmware (examples `504bf68`: soft start to duty_0 in about 100 ms; the step stays a step); the wizard now stops if the guard has tripped before the step, and can skip the VHigh tests.
 
+### Eighth session, 2026-11-23 ([report](results/bench_2026-11-23_182042/report.html)): F-2 on the board, and the real LOW1 tank
+
+Firmware with the STEP soft start (examples `504bf68`), VHigh tests skipped, duty step 0.4 → 0.5 at VHigh 28.8 V into 10 Ω, MSO54 triggered on TP203 at 3.5 A.
+
+- **F-2 is confirmed:** the inductor current went from 1.23 A to a 2.98 A peak (period-averaged; 3.55 A with the ripple) within about 35 µs of the step, then settled at 1.50 A within about 100 µs. LOW1 overshot from 10.5 to 14.1 V before settling at 13.4 V. A 0.1 duty step gave an overshoot about 6.5 times the change in steady state.
+- **The tank is not the one assumed.** The response fits L201 against the three 4.7 µF ceramics (14.1 µF, about 7 kHz, Z0 = 1.54 Ω), with the 47 µF electrolytic C203 only damping it through 2 to 4 Ω of ESR; the first model assumed an ideal 60 µF (3.6 kHz, 5.2 A). The firmware does connect C203 (`connectCapacitor()` drives pin 7 low; through optocoupler U206 that holds Q203's gate at +12 V); to confirm on the board, Q203's gate should read about 12 V to PGND while the firmware runs.
+- **The model now uses the calibrated tank** (14.1 µF + 47 µF / 3 Ω), and the bench prediction becomes 3.4 A against 3.55 A measured. The field case is revised: a 0.2 → 0.8 step at 100 V peaks at 48 A instead of 81 A, still above the 40 A limit, so F-2 stands; the step down 0.8 → 0.2 drops to 33 A (was 67 A). Duty slew limiting and a cycle-by-cycle current limit still remove it.
+- **Bench status: L2-SEN-01, L2-OV-01, L2-OV-02 and L2-STP-01 have all run.** The mechanisms behind the field failures are confirmed on the board.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.

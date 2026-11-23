@@ -17,7 +17,11 @@ BASE = dict(
     Vs=100.0, R_cab=0.05, L_cab=1e-6,
     psu_can_sink=False, t_dis=None,          # None: never disconnected
     low='battery', V_low=48.0, R_low=0.05,   # 'battery' | 'cap' | 'motor'
-    C_low=60e-6, R_load=6.0, C_mot=3.0, R_mot=0.1,
+    # LOW1 tank of the board, calibrated on the L2-STP-01 capture (bench session 2026-11-23_182042): the three 4.7 uF
+    # ceramics (C206, C209, C212) set the resonance with L201; C203 (47 uF electrolytic, switched by Q203) only damps it
+    # through its ESR (fit: 2 to 4 ohm). The first model assumed an ideal 60 uF and predicted a 5.2 A peak for 3.0 A measured.
+    C_low=14.1e-6, R_load=6.0, C_mot=3.0, R_mot=0.1,
+    C_damp=47e-6, R_damp=3.0,
     mode='current', I_ref=8.0,               # 'current' (PI loop on iL) | 'duty' (open loop)
     d0=0.48, d_step=None, t_step=1e-3,
     duty_slew=None,                          # max |dd/dt| in 1/s (None: unlimited)
@@ -48,6 +52,7 @@ def run(p):
     else:
         iL = (p['d0'] * p['Vs'] - p['V_low']) / (p['R_L'] + p['R_low'])
     vLt0 = vL + (p['R_low'] if p['low'] == 'battery' else p['R_mot'] if p['low'] == 'motor' else 0) * iL
+    vD = vL  # the damping branch starts charged to LOW1
     d = (vLt0 + iL * p['R_L']) / vH if p['mode'] == 'current' else p['d0']
     iC = d * iL
     integ = d
@@ -124,7 +129,10 @@ def run(p):
             p_cl = p['v_clamp'] * i_cl
             e_clamp += p_cl * dt
         if p['low'] == 'cap':
-            vL += (iL - vL / p['R_load']) / p['C_low'] * dt
+            i_d = (vL - vD) / p['R_damp'] if p['C_damp'] > 0 else 0.0
+            vL += (iL - vL / p['R_load'] - i_d) / p['C_low'] * dt
+            if p['C_damp'] > 0:
+                vD += i_d / p['C_damp'] * dt
         elif p['low'] == 'motor':
             vL += iL / p['C_mot'] * dt
         iL = iL_new

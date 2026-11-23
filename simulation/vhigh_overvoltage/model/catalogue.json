@@ -171,7 +171,7 @@
       "level": "D",
       "status": "implemented",
       "title": "Open-loop duty step 0.2 to 0.8 at 1 ms",
-      "purpose": "L201 against 60 uF on the low side (Z0 = 0.74 ohm, 3.6 kHz): a 60 V step across the tank.",
+      "purpose": "L201 against the board's LOW1 tank (14.1 uF of ceramics, damped by C203's ESR; calibrated on L2-STP-01): a 60 V step across it.",
       "params": {
         "mode": "duty",
         "d0": 0.2,
@@ -535,7 +535,7 @@
       "level": "D",
       "status": "implemented",
       "title": "Prediction for L2-STP-01: duty step 0.4 to 0.5 at VHigh = 30 V, 10 ohm load",
-      "purpose": "Open-loop step at low energy: 3 V across the L201 / low-side capacitor tank. The low-side capacitance (60 uF) is an assumption to check against the capture.",
+      "purpose": "Open-loop step at low energy: 3 V across the L201 / LOW1 tank, with the tank calibrated on this very test (14.1 uF of ceramics, C203 47 uF with 3 ohm ESR). The first prediction, with an ideal 60 uF, was 5.2 A.",
       "params": {
         "mode": "duty",
         "d0": 0.4,

@@ -1,0 +1,4 @@
+@@	L2-SEN-01.V_HIGH	PASS	V_HIGH sensor against the meter at the board terminals	|error| <= 3 %	31.18 V vs 31.40 V (-0.7 %)
+@@	L2-SEN-01.V1_LOW	FAIL	V1_LOW sensor against the meter at the board terminals	|error| <= 3 %	12.46 V vs 11.98 V (+4.0 %)
+@@	L2-STP-01.b	INFO	TP203 scale check: scope current before the step against the board reading (ThingSet)		1.23 A on the scope, 1.12 A from the board
+@@	L2-STP-01.a	PASS	Peak inductor current after the 0.4 to 0.5 step, against D-L2P-06	3.43 A +/- 30 %	3.55 A (+3 %)
