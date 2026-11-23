@@ -38,9 +38,9 @@ The guard protects the test. It is not the fix: at 100 us it is far too slow for
 
 | Test | VHigh | LOW1 | Other | Expected (model) |
 |---|---|---|---|---|
-| L2-OV-01 | Lab supply 32 V, 1 A limit, through a series Schottky diode, plus a 100 ohm / 30 W bleed on the board side | Lab supply 12 V, 3 A limit | MSO54 CH1 VHigh, CH2 LOW1, CH3 iL, CH4 SW | VHigh settles at 32.0 / 34.5 / 38.6 / 42.2 V for 0.5 / 1.0 / 1.25 / 1.5 A into VHigh |
+| L2-OV-01 | Lab supply 32 V, 1 A limit, through a series Schottky diode, plus a 100 ohm / 30 W bleed on the board side | Lab supply 12 V, 3 A limit | MSO54 CH1 VHigh, CH2 LOW1, CH3 iL on TP203, CH4 SW | VHigh settles at 32.0 / 34.5 / 38.6 / 42.2 V for 0.5 / 1.0 / 1.25 / 1.5 A into VHigh |
 | L2-OV-02 | Same | Same | MSO54 triggered at 43 V | 2.0 A would settle at about 48.7 V: the guard opens the leg at 45 V, and the bleed brings VHigh back to 32 V |
-| L2-STP-01 | Lab supply 30 V, plus the bleed | 10 ohm / 50 W load, no supply | MSO54 CH3 trigger at 3.5 A, 200 us/div | Duty step 0.4 → 0.5: iL peaks at about 5.2 A |
+| L2-STP-01 | Lab supply 30 V, plus the bleed | 10 ohm / 50 W load, no supply | MSO54 CH3 (TP203) trigger at 1.35 V (3.5 A), 200 us/div | Duty step 0.4 → 0.5: iL peaks at about 5.2 A |
 
 Why a bleed resistor: a lab supply cannot sink current, so the energy pushed into VHigh has to go somewhere. Through the resistor, VHigh settles at about the square root of P·R instead of running away, so the test limits itself even if the guard failed. It is also what discharges VHigh after the test. Keep it connected at all times.
 
@@ -57,6 +57,19 @@ Design choices behind the setup:
 - The voltages are scaled to the supplies at hand (32 V and 12 V; the model was first set up for 60 V and 24 V). The mechanism does not depend on the voltage: VHigh rises as soon as the injected power exceeds what the bleed draws at the set point (32² / 100 = 10.2 W, reached at 0.85 A from 12 V).
 - L2-STP-01 runs at 30 V and with a 0.1 duty step so that the overshoot stays at about 5 A, under the 7 A I1_LOW range.
 - The low-side capacitance in D-L2P-06 (60 uF) is an assumption. The ringing frequency in the capture gives its real value.
+
+## Probes
+
+Passive 10x voltage probes only, all referenced to the board ground; no current probe is needed.
+
+| Channel | Point | Ground | Scale |
+|---|---|---|---|
+| CH1 | VHigh terminal | PGND (TP5001) | 5 V/div (2 V/div for the duty step) |
+| CH2 | LOW1 terminal | PGND | 5 V/div |
+| CH3 | TP203, `I_{I1Low}`: the on-board ACS730 after its level shift | DGND (TP202 or TP204) | 1.0 V at 0 A, +0.1 V per A |
+| CH4 (optional) | Switch node of leg 1 | PGND | 10 V/div |
+
+The ACS730 (U202) sits between L201 and the low-side capacitors (C203 47 uF switched by Q203, plus C206, C209 and C212 at 4.7 uF), so TP203 carries the true inductor current, with about 1 MHz of bandwidth. A current probe on the LOW1 wire would only see the load current, smoothed by those capacitors. The record converts CH3 to amps and checks the scale against the board's own reading before the step (L2-STP-01.b). The scope ground is earth: never clip a probe ground anywhere but the board ground.
 
 ## Without an oscilloscope
 

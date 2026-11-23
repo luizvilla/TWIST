@@ -316,7 +316,14 @@ def criteria(session: Path) -> list[dict]:
         w = np.load(stp)
         ch = env.get('IL_CHANNEL', 'CH3')
         if f'{ch}_v' in w:
-            pk = float(w[f'{ch}_v'].max())
+            v = w[f'{ch}_v']
+            if env.get('IL_SOURCE') == 'TP203':  # ACS730 output after the level shift: volts to amps
+                v = (v - float(env.get('IL_OFFSET_V', 1.0))) / float(env.get('IL_V_PER_A', 0.1))
+            pk = float(v.max())
+            if 'stp_before' in steps:
+                n0 = max(1, len(v) // 10)
+                row('L2-STP-01.b', 'INFO', 'TP203 scale check: scope current before the step against the board reading (ThingSet)', '',
+                    f'{float(v[:n0].mean()):.2f} A on the scope, {steps["stp_before"]["mean"]["rI1Low_A"]:.2f} A from the board')
             pp = pred.get('D-L2P-06', {}).get('iL_pk')
             if pp:
                 ok = abs(pk - pp) <= 0.3 * pp
@@ -384,6 +391,10 @@ def report(session: Path, rows: list[dict]) -> str:
         import numpy as np
         w = np.load(wf); name = wf.parent.name
         labels = {'CH1': 'VHigh (V)', 'CH2': 'V1_low (V)', 'CH3': 'iL (A)', 'CH4': 'SW node (V)'}
+        if env.get('IL_SOURCE') == 'TP203':
+            ch_il = env.get('IL_CHANNEL', 'CH3')
+            w = dict(w)
+            w[f'{ch_il}_v'] = (w[f'{ch_il}_v'] - float(env.get('IL_OFFSET_V', 1.0))) / float(env.get('IL_V_PER_A', 0.1))
         f = ip.Figure('ms')
         for chs, unit in ((('CH1', 'CH2', 'CH4'), 'V'), (('CH3',), 'A')):
             present = [ch for ch in chs if f'{ch}_v' in w]
