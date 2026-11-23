@@ -293,7 +293,11 @@ else
   warn "no board answers with the bench firmware. The ThingSet port is the board's -if02 line above."
   warn "If its port hangs, the firmware is stuck: unplug and replug the board's USB and watch its console (-if00)."
 fi
-ask TS_PORT "ThingSet port${FOUND:+ [$FOUND]}:"; TS_PORT="${TS_PORT:-$FOUND}"
+if [[ -n "$FOUND" ]]; then
+  TS_PORT="$FOUND"   # a port that just answered wins over one saved by an earlier run
+else
+  ask TS_PORT "ThingSet port:"
+fi
 [[ -n "$TS_PORT" ]] || { warn "no port given"; exit 1; }
 write_env TS_PORT "$TS_PORT"
 ctl identity || { warn "no answer on $TS_PORT"; exit 1; }
