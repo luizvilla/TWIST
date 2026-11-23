@@ -16,7 +16,7 @@ table.kv td:first-child{width:200px;color:var(--ink2)} .check li{margin:4px 0} c
 </style></head><body><main>
 
 <h1>Bench session: bench_2026-11-23_143232</h1><div class="sub">Level L2 (on the board) · <a href="../control-center.html">control center</a> · investigation record <a href="../../README.md">README.md</a></div>
-<div class="banner bad"><div class="counts"><span>✓ 5 PASS</span><span>✗ 2 FAIL</span><span>i 4 INFO</span></div><div class="sub">Each bench result is compared with the model prediction of the same setup (D-L2P cases).</div></div>
+<div class="banner bad"><div class="counts"><span>✓ 5 PASS</span><span>✗ 2 FAIL</span><span>i 5 INFO</span></div><div class="sub">Each bench result is compared with the model prediction of the same setup (D-L2P cases).</div></div>
 <h3>1 · Session and setup</h3><div class="wrap"><table class="kv">
 <tr><td>BOARD_ID</td><td>device 49 TWIST_V1_4_2</td></tr>
 <tr><td>TWIST_HW</td><td>1.4.3</td></tr>
@@ -42,6 +42,7 @@ table.kv td:first-child{width:200px;color:var(--ink2)} .check li{margin:4px 0} c
 <tr><td>L2-OV-01.b</td><td>Settled VHigh at 1.00A into VHigh within 5 % of D-L2P-02</td><td><span class="badge pass">✓ PASS</span></td><td>34.5 V +/- 5 %</td><td>32.98 V (-4.5 %), I1 -1.152 A</td></tr>
 <tr><td>L2-OV-01.c</td><td>Step 1.25A not judged: the bench guard had stopped the leg</td><td><span class="badge info">i INFO</span></td><td></td><td>|I1_LOW| above wILimit_A (-2.575)</td></tr>
 <tr><td>L2-OV-01.e</td><td>F-1 on the board: with 1 A or more pushed into VHigh, VHigh settles above the supply set point (supply still connected)</td><td><span class="badge pass">✓ PASS</span></td><td>&gt; 32.16 V (set point at the board + 1 V)</td><td>32.98 V at 1.00A (+1.82 V)</td></tr>
+<tr><td>L2-OV-01.g</td><td>Power balance above the set point: LOW1 power taken by the leg against the power in the bleed. The difference is the converter losses and the Feeder load on VHigh, which the model leaves out</td><td><span class="badge info">i INFO</span></td><td></td><td>1.00A: 14.2 W in, 10.9 W in the bleed (77 %)</td></tr>
 <tr><td>L2-OV-01.f</td><td>VHigh just before the L2-OV-02 stop, from the firmware scope (supply still connected)</td><td><span class="badge info">i INFO</span></td><td></td><td>36.76 V with -1.25 A applied (set point 31.16 V)</td></tr>
 <tr id="L2-OV-02"><td>L2-OV-02.a</td><td>The bench guard stops the leg on V_HIGH at its 45 V limit</td><td><span class="badge fail new">✗ FAIL NEW</span></td><td>43 to 47 V, reason V_HIGH</td><td>-2.51 V, &quot;|I1_LOW| above wILimit_A&quot;</td></tr>
 <tr><td>L2-OV-02.b</td><td>After the stop VHigh falls back to the supply through the bleed</td><td><span class="badge pass">✓ PASS</span></td><td>&lt; 34 V</td><td>31.17 V</td></tr>

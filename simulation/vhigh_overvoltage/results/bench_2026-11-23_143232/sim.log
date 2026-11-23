@@ -4,6 +4,7 @@
 @@	L2-OV-01.b	PASS	Settled VHigh at 1.00A into VHigh within 5 % of D-L2P-02	34.5 V +/- 5 %	32.98 V (-4.5 %), I1 -1.152 A
 @@	L2-OV-01.c	INFO	Step 1.25A not judged: the bench guard had stopped the leg		|I1_LOW| above wILimit_A (-2.575)
 @@	L2-OV-01.e	PASS	F-1 on the board: with 1 A or more pushed into VHigh, VHigh settles above the supply set point (supply still connected)	> 32.16 V (set point at the board + 1 V)	32.98 V at 1.00A (+1.82 V)
+@@	L2-OV-01.g	INFO	Power balance above the set point: LOW1 power taken by the leg against the power in the bleed. The difference is the converter losses and the Feeder load on VHigh, which the model leaves out		1.00A: 14.2 W in, 10.9 W in the bleed (77 %)
 @@	L2-OV-01.f	INFO	VHigh just before the L2-OV-02 stop, from the firmware scope (supply still connected)		36.76 V with -1.25 A applied (set point 31.16 V)
 @@	L2-OV-02.a	FAIL	The bench guard stops the leg on V_HIGH at its 45 V limit	43 to 47 V, reason V_HIGH	-2.51 V, "|I1_LOW| above wILimit_A"
 @@	L2-OV-02.b	PASS	After the stop VHigh falls back to the supply through the bleed	< 34 V	31.17 V

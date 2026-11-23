@@ -268,6 +268,17 @@ def criteria(session: Path) -> list[dict]:
         row('L2-OV-01.e', 'PASS' if v > sp + 1 else 'FAIL',
             'F-1 on the board: with 1 A or more pushed into VHigh, VHigh settles above the supply set point (supply still connected)',
             f'> {sp + 1:.2f} V (set point at the board + 1 V)', f'{v:.2f} V at {name[5:]} (+{v - sp:.2f} V)')
+    bal = []
+    rb = float(env.get('R_BLEED_OHM') or 100)
+    for name, _ in OV01_STEPS[1:]:
+        if name in steps and str(steps[name]['last'].get('rTripped')).lower() not in ('true', '1'):
+            m = steps[name]['mean']; vh = m['rVHigh_V']
+            if vh > sp + 0.5:  # above the set point the supply delivers nothing: all of the bleed power comes from the leg
+                p_in = m['rV1Low_V'] * abs(m['rI1Low_A']); p_out = vh ** 2 / rb
+                bal.append(f'{name[5:]}: {p_in:.1f} W in, {p_out:.1f} W in the bleed ({p_out / p_in * 100:.0f} %)')
+    if bal:
+        row('L2-OV-01.g', 'INFO', 'Power balance above the set point: LOW1 power taken by the leg against the power in the bleed. '
+            'The difference is the converter losses and the Feeder load on VHigh, which the model leaves out', '', '; '.join(bal))
     fw2 = session / 'fwscope' / 'ov02.json'
     if fw2.exists():
         d = json.loads(fw2.read_text()); ch = d['channels']; pre = d['pretrigger']

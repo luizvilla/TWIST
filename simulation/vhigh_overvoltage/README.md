@@ -148,6 +148,16 @@ Setup: VHigh supply 32 V through an IN4007 (31.16 V at the board), 100 Ω bleed,
 - **The bench guard tripped falsely on current**, at 1.25 A and at 2 A. Each trip was a single sample above the 2.5 A limit, at the moment a new reference was written. The limit did not leave room for the inductor ripple (about 1.2 A peak to peak). The wizard now sets 4 A. Still to run: the 1.5 A step of L2-OV-01, and L2-OV-02's stop on VHigh at 45 V.
 - **L2-STP-01** ran without the oscilloscope, so it is INFO only (2.5 A seen at 100 µs per sample). Redo it with the MSO54.
 
+### Second bench session, 2026-11-23 ([report](results/bench_2026-11-23_162247/report.html))
+
+Same setup (31.14 V at the board, 12 V LOW1 supply, 100 Ω bleed, no oscilloscope), current guard at 4 A.
+
+- **F-1 is confirmed through the whole range.** With the supply still connected, VHigh settled at 31.29 / 32.77 / 35.93 / 40.06 V with 0.5 / 1.0 / 1.25 / 1.5 A pushed into it, up to 8.9 V above the supply. At about 1.9 A it rose from 30.7 to 45.0 V in 102 ms.
+- **The bench guard (L2-OV-02) works.** It stopped the leg on V_HIGH at 45.03 V and latched, and the bleed brought VHigh back to 31.08 V.
+- **The model reads 5 to 7 % high above the set point.** It has no converter losses. The power balance shows that 74 to 81 % of the power taken from LOW1 reaches the bleed; the rest is switching and conduction losses plus the Feeder, which is powered from VHigh. A loss term calibrated on this session would close the gap.
+- **The two sensor checks failed for procedural reasons.** The V_HIGH reading (29.20 V) was taken before the supply was moved from 30 V to 32 V; the wizard now asks for the meter readings first and reads the sensors right after. LOW1 reads 4 % above "12.00" in both sessions: check whether that value was a meter reading or the supply's set point.
+- **L2-STP-01** is still INFO only: it needs the MSO54.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.

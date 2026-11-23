@@ -352,9 +352,15 @@ fi
 stage "Power-up and sensor check"
 step "VHigh supply output ON (32 V). The bleed draws about 0.32 A."
 step "Low-side supply output ON (12 V). It should deliver almost nothing."
-pause "Both supplies ON? Press Enter to read the board's sensors"
-ctl settle sensor_check --seconds 1 --session "$SESSION"
-say "Now read the voltages at the board terminals with a multimeter, or from the supply displays."
+pause "Both supplies ON? Press Enter"
+step "Check the supplies show their set points for this session (32 V and 12 V), not values left from an earlier run."
+say "Measure with a multimeter at the board terminals, then the wizard reads the board's sensors right after:"
+note "Measure VHigh on the board side of the diode: one diode drop below the supply set point."
+ask VHIGH_PSU_V "VHigh at the board terminals, after the diode (V):"
+ask VLOW_PSU_V "LOW1 at the board terminals (V):"
+write_env VHIGH_PSU_V "$VHIGH_PSU_V"
+write_env VLOW_PSU_V "$VLOW_PSU_V"
+ctl settle sensor_check --seconds 0.5 --session "$SESSION"
 if ! "$PY" - "$SESSION/steps/sensor_check.json" <<'EOF'
 import json, sys
 m = json.load(open(sys.argv[1]))['mean']
@@ -367,11 +373,6 @@ then
   warn "The current loop would act on a wrong current. Calibrate I1_LOW (OwnTech data API calibration) and re-run."
   confirm "Continue anyway (not recommended)?" || exit 1
 fi
-note "Measure VHigh on the board side of the diode: about 0.4 V below the supply set point."
-ask VHIGH_PSU_V "VHigh at the board terminals, after the diode (V):"
-ask VLOW_PSU_V "LOW1 at the terminals (V):"
-write_env VHIGH_PSU_V "$VHIGH_PSU_V"
-write_env VLOW_PSU_V "$VLOW_PSU_V"
 note "More than 3 % between the board's reading and the meter fails L2-OV-01.s in the record."
 
 # ── 7 ─────────────────────────────────────────────────────────────────────
