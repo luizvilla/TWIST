@@ -279,6 +279,15 @@ def criteria(session: Path) -> list[dict]:
     if bal:
         row('L2-OV-01.g', 'INFO', 'Power balance above the set point: LOW1 power taken by the leg against the power in the bleed. '
             'The difference is the converter losses and the Feeder load on VHigh, which the model leaves out', '', '; '.join(bal))
+    cap = session / 'scope' / 'ov01_1.50A' / 'waveforms.npz'
+    cb, cv = env.get('CH_IBLEED', 'none'), env.get('CH_VHIGH')
+    if cap.exists() and cb != 'none' and cv:
+        import numpy as np
+        wv = np.load(cap)
+        if f'{cb}_v' in wv and f'{cv}_v' in wv:
+            ib, vh = float(wv[f'{cb}_v'].mean()), float(wv[f'{cv}_v'].mean())
+            row('L2-OV-01.h', 'INFO', 'Bleed current probe at 1.5 A: the energy pushed into VHigh ends in the bleed', '',
+                f'{ib:.3f} A x {rb:g} ohm = {ib * rb:.2f} V against VHigh {vh:.2f} V; {ib * vh:.1f} W in the bleed')
     fw2 = session / 'fwscope' / 'ov02.json'
     if fw2.exists():
         d = json.loads(fw2.read_text()); ch = d['channels']; pre = d['pretrigger']
@@ -390,19 +399,23 @@ def report(session: Path, rows: list[dict]) -> str:
     for wf in sorted((session / 'scope').glob('*/waveforms.npz')) if (session / 'scope').exists() else []:
         import numpy as np
         w = np.load(wf); name = wf.parent.name
-        labels = {'CH1': 'VHigh (V)', 'CH2': 'V1_low (V)', 'CH3': 'iL (A)', 'CH4': 'SW node (V)'}
+        roles = {env.get('CH_VHIGH', 'CH1'): ('VHigh (V)', 'V'), env.get('CH_VLOW', 'CH2'): ('LOW1 (V)', 'V'),
+                 env.get('IL_CHANNEL', 'CH3'): ('iL from TP203 (A)' if env.get('IL_SOURCE') == 'TP203' else 'iL (A)', 'A')}
+        if env.get('CH_IBLEED', 'none') != 'none':
+            roles[env['CH_IBLEED']] = ('bleed current (A)', 'A')
+        w = dict(w)
         if env.get('IL_SOURCE') == 'TP203':
             ch_il = env.get('IL_CHANNEL', 'CH3')
-            w = dict(w)
-            w[f'{ch_il}_v'] = (w[f'{ch_il}_v'] - float(env.get('IL_OFFSET_V', 1.0))) / float(env.get('IL_V_PER_A', 0.1))
+            if f'{ch_il}_v' in w:
+                w[f'{ch_il}_v'] = (w[f'{ch_il}_v'] - float(env.get('IL_OFFSET_V', 1.0))) / float(env.get('IL_V_PER_A', 0.1))
         f = ip.Figure('ms')
-        for chs, unit in ((('CH1', 'CH2', 'CH4'), 'V'), (('CH3',), 'A')):
-            present = [ch for ch in chs if f'{ch}_v' in w]
+        for unit in ('V', 'A'):
+            present = [ch for ch in ('CH1', 'CH2', 'CH3', 'CH4') if f'{ch}_v' in w and roles.get(ch, (ch, 'V'))[1] == unit]
             if not present:
                 continue
             c = f.chart(unit, 200)
             for k, ch in enumerate(present):
-                f.line(c, labels[ch], w[f'{ch}_t'] * 1e3, w[f'{ch}_v'], ip.SERIES[k % 4], 2 if k == 0 else 1.2)
+                f.line(c, f'{ch}: ' + roles.get(ch, (ch + ' (V)', 'V'))[0], w[f'{ch}_t'] * 1e3, w[f'{ch}_v'], ip.SERIES[k % 4], 2 if k == 0 else 1.2)
         png = wf.parent / 'screen.png'
         img = f'<p><a href="{e(str(png.relative_to(session)))}">MSO54 screenshot</a></p>' if png.exists() else ''
         p.append(f'<figure><div><b>MSO54: {e(name)}</b></div>{f.html("mso_" + name, "MSO54 " + name)}{img}'

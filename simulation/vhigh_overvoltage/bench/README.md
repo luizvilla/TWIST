@@ -69,6 +69,8 @@ Passive 10x voltage probes only, all referenced to the board ground; no current 
 | CH3 | TP203, `I_{I1Low}`: the on-board ACS730 after its level shift | DGND (TP202 or TP204) | 1.0 V at 0 A, +0.1 V per A |
 | CH4 (optional) | Switch node of leg 1 | PGND | 10 V/div |
 
+Stage 5 asks which channel carries which signal, so any layout works. A current probe on the bleed resistor, if there is one, is used as a direct check that the energy pushed into VHigh ends in the bleed (L2-OV-01.h: bleed current × R against VHigh).
+
 The ACS730 (U202) sits between L201 and the low-side capacitors (C203 47 uF switched by Q203, plus C206, C209 and C212 at 4.7 uF), so TP203 carries the true inductor current, with about 1 MHz of bandwidth. A current probe on the LOW1 wire would only see the load current, smoothed by those capacitors. The record converts CH3 to amps and checks the scale against the board's own reading before the step (L2-STP-01.b). The scope ground is earth: never clip a probe ground anywhere but the board ground.
 
 ## Without an oscilloscope
