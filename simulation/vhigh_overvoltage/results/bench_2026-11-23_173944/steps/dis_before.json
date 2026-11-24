@@ -1,0 +1,37 @@
+{
+ "name": "dis_before",
+ "time": "2026-11-24T17:23:06",
+ "mean": {
+  "rVHigh_V": 31.159000000000002,
+  "rV1Low_V": 12.269,
+  "rI1Low_A": -0.46630000000000005,
+  "rDuty": 0.34735,
+  "rVHigh_V_sd": 0.11067520047418063,
+  "rI1Low_A_sd": 0.0809259538096401
+ },
+ "last": {
+  "rVHigh_V": 31.12,
+  "rV1Low_V": 12.14,
+  "rI1Low_A": -0.41,
+  "rV2Low_V": 0.0,
+  "rI2Low_A": 0.0,
+  "rIHigh_A": 0.0,
+  "rDuty": 0.3458,
+  "rTemp1_degC": 33.5,
+  "rTemp2_degC": 31.6,
+  "Mode": 1,
+  "wCurrentRef_A": -0.5,
+  "rCurrentApplied_A": -0.5,
+  "wDuty0": 0.4,
+  "wDuty1": 0.5,
+  "wStep": 0,
+  "wOvLimit_V": 45.0,
+  "wILimit_A": 4.0,
+  "wV1LowLimit_V": 20.0,
+  "rTripped": false,
+  "rTripCode": 0,
+  "rTripReason": "none",
+  "rTripValue": 0.0
+ },
+ "expect": null
+}

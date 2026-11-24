@@ -321,6 +321,12 @@ def mso_arm(session: str | None, preset: str = 'ov', auto: bool = False, source:
         sc.inst.write(f'TRIGger:A:EDGE:SLOpe {slope}')
         sc.inst.write(f'TRIGger:A:LEVel:{src} {level}')
         sc.inst.write('TRIGger:A:MODe NORMal')
+    if 'sw' in r and 'vhigh' in r and 'sw' in p:
+        # display only: Vds(Q201) = VHigh - switch node on the scope (the record computes it from the waveforms)
+        sc.inst.write('MATH:ADDNew "MATH1"')
+        sc.inst.write(f'MATH:MATH1:DEFine "{r["vhigh"].capitalize()}-{r["sw"].capitalize()}"')
+        sc.inst.write('MATH:MATH1:LABel:NAMe "Vds Q201"')
+        sc.inst.write('DISplay:GLObal:MATH1:STATE ON')
     sc.q('*OPC?', timeout_s=10)
     err = scope_errors(sc)
     sc.arm_single()

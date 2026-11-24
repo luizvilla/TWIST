@@ -1,0 +1,8 @@
+@@	L2-SEN-01.V_HIGH	PASS	V_HIGH sensor against the meter at the board terminals	|error| <= 3 %	31.16 V vs 31.40 V (-0.7 %)
+@@	L2-SEN-01.V1_LOW	FAIL	V1_LOW sensor against the meter at the board terminals	|error| <= 3 %	12.42 V vs 11.98 V (+3.6 %)
+@@	L2-OV-03.a	INFO	Peak Vds of each MOSFET, fast capture as VHigh crossed the trigger		Q201 (high side) 43.1 V, blocking 73 % of the time; Q202 (low side) 41.3 V, blocking 27 %; VHigh max 43.0 V
+@@	L2-OV-03.c	INFO	Guard stop during the L2-OV-03 run		45.03 V, "V_HIGH above wOvLimit_V"
+@@	L2-DIS-01.a	INFO	Board self-powered from LOW1 alone (USB unplugged, VHigh supply off), operator		yes: the spin stays on 
+@@	L2-DIS-01.b	PASS	H1 assumption: the leg keeps switching (current held at its reference) after the VHigh supply lead is opened	|I1 - ref| < 0.2 A, no trip	I1 -0.47 A before, -0.50 A after (ref -0.50); VHigh 31.16 -> 20.36 V
+@@	L2-DIS-01.c	INFO	VHigh at the pull-out (MSO54, peak detect): level before, level after, spike above the level before		30.81 V before, 20.52 V after, spike -1.56 V
+@@	L2-DIS-01.d	INFO	Leg still switching after the pull-out, operator (scope, sound, readings)		yes: 

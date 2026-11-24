@@ -94,7 +94,8 @@ TESTS = [
      'phases': [
          {'id': 'rewire', 'label': 'Switch-node probe', 'kind': 'check',
           'text': 'Supplies may stay on, leg idle. Move a probe to the switch node of leg 1 (L201 side of Q201/Q202), ground on PGND, '
-                  'and give its channel. TP203 is not needed here.',
+                  'and give its channel. VHigh stays on its own probe: Vds(Q201) = VHigh - switch node is computed from the two '
+                  '(and shown on the scope as MATH1); no second VHigh probe is needed. TP203 is not needed here.',
           'inputs': [('CH_SW', 'Switch-node channel', 'CH4'), ('IL_CHANNEL', 'TP203 channel (none now)', 'none')]},
          {'id': 'guard', 'label': 'Bench guard', 'kind': 'action', 'text': '45 V, 4 A, LOW1 20 V; clears any trip.'},
          {'id': 'start', 'label': 'Start at 1.25 A', 'kind': 'action', 'confirm': 'Start CURRENT mode at -1.25 A?', 'text': ''},
@@ -600,10 +601,17 @@ def make_handler(app: App):
     return H
 
 
-def newest_open_session() -> Path | None:
+def newest_open_session(max_age_h: float = 12.0) -> Path | None:
+    """@brief The newest session never ended and started less than max_age_h ago (an aborted older one is left alone)."""
     for d in sorted(RESULTS.glob('bench_*'), reverse=True):
         env = bc.parse_env(d / 'session.env')
-        if env and not env.get('SESSION_ENDED'):
+        if not env or env.get('SESSION_ENDED'):
+            continue
+        try:
+            started = dt.datetime.fromisoformat(env.get('SESSION_STARTED', ''))
+        except ValueError:
+            continue
+        if (dt.datetime.now(started.tzinfo) - started).total_seconds() < max_age_h * 3600:
             return d
     return None
 

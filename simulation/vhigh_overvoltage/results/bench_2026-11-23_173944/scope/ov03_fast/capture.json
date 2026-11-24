@@ -1,0 +1,464 @@
+{
+  "timestamp": "2026-11-24T17:42:25",
+  "label": "ov03_fast",
+  "stats": "",
+  "held": "already stopped",
+  "setup": {
+    "idn": "TEKTRONIX,MSO54,C017217,CF:91.1CT FV:2.8.1.1496",
+    "resource": "USB0::1689::1314::C017217::0::INSTR",
+    "acquire": {
+      "state": "0",
+      "mode": "SAMPLE",
+      "stopafter": "SEQUENCE",
+      "num_acq": 1.0
+    },
+    "horizontal": {
+      "scale_s_div": 1e-06,
+      "position_pct": 50.0,
+      "record_length": 31250.0,
+      "sample_rate": 3125000000.0
+    },
+    "trigger": {
+      "type": "EDGE",
+      "source": "CH2",
+      "slope": "RISE",
+      "coupling": "DC",
+      "level": 43.0,
+      "mode": "NORMAL"
+    },
+    "channels": {
+      "CH1": {
+        "label": "",
+        "scale_div": 5.0,
+        "offset": 12.0,
+        "position_div": 0.0,
+        "coupling": "DC",
+        "bandwidth": 350000000.0,
+        "termination": 1000000.0,
+        "probe_units": "V"
+      },
+      "CH2": {
+        "label": "",
+        "scale_div": 5.0,
+        "offset": 37.0,
+        "position_div": 0.0,
+        "coupling": "DC",
+        "bandwidth": 350000000.0,
+        "termination": 1000000.0,
+        "probe_units": "V"
+      },
+      "CH3": {
+        "label": "",
+        "scale_div": 0.1,
+        "offset": 0.35,
+        "position_div": 0.0,
+        "coupling": "DC",
+        "bandwidth": 350000000.0,
+        "termination": 250000.0,
+        "probe_units": "V"
+      },
+      "CH4": {
+        "label": "",
+        "scale_div": 10.0,
+        "offset": 20.0,
+        "position_div": 0.0,
+        "coupling": "DC",
+        "bandwidth": 350000000.0,
+        "termination": 250000.0,
+        "probe_units": "V"
+      }
+    }
+  },
+  "measurements": [
+    {
+      "id": "MEAS1",
+      "type": "MEAN",
+      "source1": "CH2",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 42.4757072726326,
+        "minimu": 42.4757072726326,
+        "maximu": 42.4757072726326,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 42.4757072726326,
+        "minimu": 42.4757072726326,
+        "maximu": 42.4757072726326,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS2",
+      "type": "MEAN",
+      "source1": "CH4",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.7579399540786,
+        "minimu": 11.7579399540786,
+        "maximu": 11.7579399540786,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.7579399540786,
+        "minimu": 11.7579399540786,
+        "maximu": 11.7579399540786,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS3",
+      "type": "FREQUENCY",
+      "source1": "CH2",
+      "source2": null,
+      "edges": null,
+      "unit": "Hz",
+      "current": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      },
+      "all": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      }
+    },
+    {
+      "id": "MEAS4",
+      "type": "PWIDTH",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "s",
+      "current": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      },
+      "all": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      }
+    },
+    {
+      "id": "MEAS5",
+      "type": "PDUTY",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "%",
+      "current": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      },
+      "all": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      }
+    },
+    {
+      "id": "MEAS6",
+      "type": "RMS",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.9115080509207,
+        "minimu": 11.9115080509207,
+        "maximu": 11.9115080509207,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.9115080509207,
+        "minimu": 11.9115080509207,
+        "maximu": 11.9115080509207,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS7",
+      "type": "MEAN",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.911321312282,
+        "minimu": 11.911321312282,
+        "maximu": 11.911321312282,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.911321312282,
+        "minimu": 11.911321312282,
+        "maximu": 11.911321312282,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS8",
+      "type": "TOP",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.9303616116116,
+        "minimu": 11.9303616116116,
+        "maximu": 11.9303616116116,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.9303616116116,
+        "minimu": 11.9303616116116,
+        "maximu": 11.9303616116116,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS9",
+      "type": "BASE",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.8875453578579,
+        "minimu": 11.8875453578579,
+        "maximu": 11.8875453578579,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.8875453578579,
+        "minimu": 11.8875453578579,
+        "maximu": 11.8875453578579,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS10",
+      "type": "TOP",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.9303616116116,
+        "minimu": 11.9303616116116,
+        "maximu": 11.9303616116116,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.9303616116116,
+        "minimu": 11.9303616116116,
+        "maximu": 11.9303616116116,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS11",
+      "type": "BASE",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 11.8875453578579,
+        "minimu": 11.8875453578579,
+        "maximu": 11.8875453578579,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 11.8875453578579,
+        "minimu": 11.8875453578579,
+        "maximu": 11.8875453578579,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS12",
+      "type": "FREQUENCY",
+      "source1": "CH1",
+      "source2": null,
+      "edges": null,
+      "unit": "Hz",
+      "current": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      },
+      "all": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      }
+    },
+    {
+      "id": "MEAS13",
+      "type": "RMS",
+      "source1": "CH2",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": 42.4757714241925,
+        "minimu": 42.4757714241925,
+        "maximu": 42.4757714241925,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": 42.4757714241925,
+        "minimu": 42.4757714241925,
+        "maximu": 42.4757714241925,
+        "stddev": 0.0,
+        "pk2pk": 0.0,
+        "popula": 1.0
+      }
+    },
+    {
+      "id": "MEAS14",
+      "type": "FREQUENCY",
+      "source1": "CH2",
+      "source2": null,
+      "edges": null,
+      "unit": "Hz",
+      "current": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      },
+      "all": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": null,
+        "pk2pk": null,
+        "popula": 0.0
+      }
+    },
+    {
+      "id": "MEAS15",
+      "type": "MEAN",
+      "source1": "CH3",
+      "source2": null,
+      "edges": null,
+      "unit": "V",
+      "current": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": 0.0,
+        "pk2pk": null,
+        "popula": 1.0
+      },
+      "all": {
+        "mean": null,
+        "minimu": null,
+        "maximu": null,
+        "stddev": 0.0,
+        "pk2pk": null,
+        "popula": 1.0
+      }
+    }
+  ],
+  "waveforms": {
+    "CH1": {
+      "points": 31250,
+      "min": 11.6078125,
+      "max": 12.178125,
+      "mean": 11.91131855,
+      "rms": 11.911508050920691
+    },
+    "CH2": {
+      "points": 31250,
+      "min": 42.2453125,
+      "max": 42.95703125,
+      "mean": 42.475716475,
+      "rms": 42.47577142419257
+    },
+    "CH3": {
+      "points": 31250,
+      "min": 0.861984375,
+      "max": 0.861984375,
+      "mean": 0.8619843750000004,
+      "rms": 0.861984375
+    },
+    "CH4": {
+      "points": 31250,
+      "min": -0.49687500000000284,
+      "max": 41.321875000000006,
+      "mean": 11.757632850000002,
+      "rms": 20.75905274238996
+    }
+  }
+}

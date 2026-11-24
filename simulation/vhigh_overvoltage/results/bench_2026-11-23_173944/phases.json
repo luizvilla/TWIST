@@ -1,0 +1,93 @@
+{
+ "setup": {
+  "session": {
+   "state": "done",
+   "time": "2026-11-24T17:19:05",
+   "text": "confirmed"
+  },
+  "board": {
+   "state": "done",
+   "time": "2026-11-24T17:19:14",
+   "text": "bench firmware on /dev/ttyACM2 (examples 504bf68)"
+  },
+  "scope": {
+   "state": "done",
+   "time": "2026-11-24T17:20:03",
+   "text": "TEKTRONIX,MSO54,C017217,CF:91.1CT FV:2.8.1.1496 | acquisition stopped | trigger NORMAL"
+  },
+  "power": {
+   "state": "done",
+   "time": "2026-11-24T17:20:29",
+   "text": "confirmed"
+  },
+  "sensors": {
+   "state": "done",
+   "time": "2026-11-24T17:21:32",
+   "text": "board VHigh 31.16 V (meter 31.4), LOW1 12.42 V (meter 11.98), I1 0.052 A with the PWM off"
+  }
+ },
+ "dis01": {
+  "selfpower": {
+   "state": "done",
+   "time": "2026-11-24T17:22:11",
+   "text": "confirmed: yes"
+  },
+  "board": {
+   "state": "done",
+   "time": "2026-11-24T17:22:17",
+   "text": "bench firmware on /dev/ttyACM2 (examples 504bf68)"
+  },
+  "guard": {
+   "state": "done",
+   "time": "2026-11-24T17:22:30",
+   "text": "guard 45 V, 4.0 A, LOW1 20 V; trip cleared"
+  },
+  "start": {
+   "state": "done",
+   "time": "2026-11-24T17:23:06",
+   "text": "VHigh 31.16 V, I1 -0.466 A, LOW1 12.27 V"
+  },
+  "arm": {
+   "state": "done",
+   "time": "2026-11-24T17:23:13",
+   "text": "MSO54 armed, single sequence, vhigh (CH2) FALL at 29; 0.04 s/div, 1250000.0 points, peak detect; trigger state AUTO"
+  },
+  "pull": {
+   "state": "done",
+   "time": "2026-11-24T17:24:11",
+   "text": "MSO54 triggered; scope/dis01/; after the pull-out: VHigh 20.36 V, I1 -0.499 A, tripped False"
+  },
+  "switching": {
+   "state": "done",
+   "time": "2026-11-24T17:24:58",
+   "text": "confirmed: yes"
+  },
+  "idle": {
+   "state": "done",
+   "time": "2026-11-24T17:25:08",
+   "text": "leg off"
+  }
+ },
+ "ov03": {
+  "rewire": {
+   "state": "done",
+   "time": "2026-11-24T17:35:29",
+   "text": "confirmed"
+  },
+  "guard": {
+   "state": "done",
+   "time": "2026-11-24T17:35:45",
+   "text": "guard 45 V, 4.0 A, LOW1 20 V; trip cleared"
+  },
+  "start": {
+   "state": "done",
+   "time": "2026-11-24T17:41:09",
+   "text": "VHigh 34.04 V, I1 -1.299 A"
+  },
+  "fast": {
+   "state": "done",
+   "time": "2026-11-24T17:42:27",
+   "text": "MSO54 armed, single sequence, vhigh (CH2) RISe at 43; 1e-06 s/div, 31250.0 points, sample; trigger state ARMED; guard stopped the leg at 45.03 (V_HIGH above wOvLimit_V) after 1.57 s; MSO54 triggered; scope/ov03_fast/"
+  }
+ }
+}

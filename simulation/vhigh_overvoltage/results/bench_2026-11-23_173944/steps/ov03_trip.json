@@ -1,0 +1,28 @@
+{
+ "name": "ov03_trip",
+ "trip": {
+  "rVHigh_V": 31.0,
+  "rV1Low_V": 12.36,
+  "rI1Low_A": 0.014,
+  "rV2Low_V": 0.0,
+  "rI2Low_A": 0.0,
+  "rIHigh_A": 0.0,
+  "rDuty": 0.2227,
+  "rTemp1_degC": 25.7,
+  "rTemp2_degC": 30.9,
+  "Mode": 0,
+  "wCurrentRef_A": -2.0,
+  "rCurrentApplied_A": 0.0,
+  "wDuty0": 0.4,
+  "wDuty1": 0.5,
+  "wStep": 0,
+  "wOvLimit_V": 45.0,
+  "wILimit_A": 4.0,
+  "wV1LowLimit_V": 20.0,
+  "rTripped": true,
+  "rTripCode": 1,
+  "rTripReason": "V_HIGH above wOvLimit_V",
+  "rTripValue": 45.028,
+  "seconds_waited": 1.57
+ }
+}
