@@ -2,6 +2,7 @@
 
 Investigation record, 2026-11-23. Board: TWIST V1.4.3 (also applies to the Ownverter, which shares the power-leg topology).
 
+- **Diagnosis synthesis** (hypotheses, tests, evidence, conclusions, open gaps): [`DIAGNOSIS.md`](DIAGNOSIS.md).
 - **Map of where this is going:** wayfinder issue [luizvilla/TWIST#10](https://github.com/luizvilla/TWIST/issues/10), with a Mermaid map of done, open and blocked tickets (#1–#9).
 - **Results:** [`results/control-center.html`](results/control-center.html). Every case has interactive figures and links to its campaign.
 - **Simulation code:** [`model/`](model/). Its `README.md` explains how to run a campaign and add a case.
