@@ -200,6 +200,14 @@ Firmware with the STEP soft start (examples `504bf68`), VHigh tests skipped, dut
 - **The model now uses the calibrated tank** (14.1 µF + 47 µF / 3 Ω), and the bench prediction becomes 3.4 A against 3.55 A measured. The field case is revised: a 0.2 → 0.8 step at 100 V peaks at 48 A instead of 81 A, still above the 40 A limit, so F-2 stands; the step down 0.8 → 0.2 drops to 33 A (was 67 A). Duty slew limiting and a cycle-by-cycle current limit still remove it.
 - **Bench status: L2-SEN-01, L2-OV-01, L2-OV-02 and L2-STP-01 have all run.** The mechanisms behind the field failures are confirmed on the board.
 
+### Bench app sessions, 2026-11-24: the gaps of the synthesis closed
+
+Run with the new bench app; L2-DIS-01 went into `bench_2026-11-23_173944` (reopened before the 12 h rule), L2-OV-03 into `bench_2026-11-24_174700`.
+
+- **L2-OV-03 (#11), why the high side:** Q201 blocks VHigh 73 % of each period and Q202 27 % (boost from 12 V); in peak detect over the whole rise neither exceeds the bus (45.0 / 43.3 V at the 45 V stop). The high side holds the overvoltage longest.
+- **L2-DIS-01 (#12), real disconnect:** the board powers itself from LOW1 with USB unplugged and the VHigh supply off. At 0.5 A, opening the VHigh lead left the current at its reference (−0.50 A), no trip, while VHigh fell from 31.2 to 20.4 V. No spike at the pull-out.
+- To check: the bleed current probe read 0.86 A at 43 V (expected 0.43 A) in the L2-OV-03 fast capture: probe ratio or a double pass.
+
 ### Firmware: Core2 safety API
 
 - [ ] Overvoltage limit on VHigh on the hardware path: comparator into the HRTIM fault input, latched, both legs off, set at about 110 V. Software and ADC-watchdog checks only as backup.

@@ -1,0 +1,5 @@
+@@	L2-SEN-01.V_HIGH	PASS	V_HIGH sensor against the meter at the board terminals	|error| <= 3 %	31.20 V vs 32.00 V (-2.5 %)
+@@	L2-SEN-01.V1_LOW	PASS	V1_LOW sensor against the meter at the board terminals	|error| <= 3 %	12.45 V vs 12.20 V (+2.0 %)
+@@	L2-OV-03.a	INFO	Peak Vds of each MOSFET, fast capture as VHigh crossed the trigger		Q201 (high side) 43.2 V, blocking 73 % of the time; Q202 (low side) 41.4 V, blocking 27 %; VHigh max 42.9 V
+@@	L2-OV-03.b	INFO	Peak Vds of each MOSFET, peak-detect capture of the whole rise		Q201 (high side) 45.0 V, blocking 73 % of the time; Q202 (low side) 43.3 V, blocking 27 %; VHigh max 44.9 V
+@@	L2-OV-03.c	INFO	Guard stop during the L2-OV-03 run		45.03 V, "V_HIGH above wOvLimit_V"

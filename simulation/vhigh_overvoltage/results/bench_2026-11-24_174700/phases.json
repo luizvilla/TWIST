@@ -1,0 +1,66 @@
+{
+ "ov03": {
+  "rewire": {
+   "state": "done",
+   "time": "2026-11-24T17:47:13",
+   "text": "confirmed"
+  },
+  "guard": {
+   "state": "done",
+   "time": "2026-11-24T17:51:35",
+   "text": "guard 45 V, 4.0 A, LOW1 20 V; trip cleared"
+  },
+  "start": {
+   "state": "done",
+   "time": "2026-11-24T17:51:43",
+   "text": "VHigh 34.16 V, I1 -1.236 A"
+  },
+  "fast": {
+   "state": "done",
+   "time": "2026-11-24T17:51:53",
+   "text": "MSO54 armed, single sequence, vhigh (CH2) RISe at 43; 1e-06 s/div, 31250.0 points, sample; trigger state READY; guard stopped the leg at 45.03 (V_HIGH above wOvLimit_V) after 1.57 s; MSO54 triggered; scope/ov03_fast/"
+  },
+  "restart": {
+   "state": "done",
+   "time": "2026-11-24T17:52:16",
+   "text": "VHigh 34.37 V, I1 -1.315 A"
+  },
+  "long": {
+   "state": "done",
+   "time": "2026-11-24T17:52:41",
+   "text": "MSO54 armed, single sequence, vhigh (CH2) RISe at 43; 0.04 s/div, 1250000.0 points, peak detect; trigger state ARMED; guard stopped the leg at 45.03 (V_HIGH above wOvLimit_V) after 1.57 s; MSO54 triggered; scope/ov03_long/"
+  },
+  "idle": {
+   "state": "done",
+   "time": "2026-11-24T17:53:12",
+   "text": "leg off"
+  }
+ },
+ "setup": {
+  "session": {
+   "state": "done",
+   "time": "2026-11-24T17:47:23",
+   "text": "confirmed"
+  },
+  "board": {
+   "state": "done",
+   "time": "2026-11-24T17:47:30",
+   "text": "bench firmware on /dev/ttyACM1 (examples 504bf68)"
+  },
+  "scope": {
+   "state": "done",
+   "time": "2026-11-24T17:49:51",
+   "text": "TEKTRONIX,MSO54,C017217,CF:91.1CT FV:2.8.1.1496 | acquisition running | trigger NORMAL"
+  },
+  "power": {
+   "state": "done",
+   "time": "2026-11-24T17:49:56",
+   "text": "confirmed"
+  },
+  "sensors": {
+   "state": "done",
+   "time": "2026-11-24T17:51:25",
+   "text": "board VHigh 31.2 V (meter 32), LOW1 12.45 V (meter 12.2), I1 -0.05 A with the PWM off"
+  }
+ }
+}

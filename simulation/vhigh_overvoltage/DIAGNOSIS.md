@@ -1,6 +1,6 @@
 # Diagnosis synthesis: why TWIST and Ownverter MOSFETs died
 
-Status on 2026-11-24, at the end of the diagnosis phase. This document ties each hypothesis to the tests that were run, the evidence they gave, and what is concluded. It also lists what is **not** established, so that gaps are visible before the protections are designed.
+Status on 2026-11-24, at the end of the diagnosis phase (gaps 1–3 closed on the bench the same day). This document ties each hypothesis to the tests that were run, the evidence they gave, and what is concluded. It also lists what is **not** established, so that gaps are visible before the protections are designed.
 
 - Raw data: [`results/control-center.html`](results/control-center.html) (model campaigns and bench sessions).
 - Day-by-day record: [`README.md`](README.md).
@@ -68,7 +68,7 @@ In every case there was a lab supply on VHigh, and the firmware had no protectio
 
 ### H5: fast spike at disconnect
 
-**Not tested.** Ranked low by reasoning: the cable current is interrupted at the plug, and C230, C231 and the ceramics sit between the cable and Q201. No pull-out has been done on the bench with the scope on VHigh.
+**Not seen on the bench.** Ranked low by reasoning: the cable current is interrupted at the plug, and C230, C231 and the ceramics sit between the cable and Q201. A real pull-out of the VHigh lead at 0.5 A (L2-DIS-01) showed no spike in peak detect: VHigh only fell. That is at a small cable current, not at field currents.
 
 ### F-3: active clamp
 
@@ -92,14 +92,9 @@ The first bench firmware took V1_low live in its current loop's feedforward. Wit
 
 These are the places where the reasoning is not closed yet.
 
-1. **Why the high side?** ([#11](https://github.com/luizvilla/TWIST/issues/11)) In H1 the overvoltage appears across whichever MOSFET is off, and Q201 and Q202 block VHigh in turn. Nothing so far explains why the high side dies more often. Candidates, untested:
-   - in boost from a low LOW1, the duty is small, so Q201 blocks VHigh for most of the period;
-   - Q201's body-diode reverse recovery in the boost direction (there is no Schottky across the high side);
-   - the order in which the two devices reach avalanche.
-
-   This matters for the protection: a VHigh trip protects both devices, but a high-side-only measure (the clamp, or a snubber on Q201) would not.
-2. **"The board keeps switching" is assumed, not shown in the failure condition** ([#12](https://github.com/luizvilla/TWIST/issues/12)). The bench showed the backfeed (VHigh 11.4 V from LOW1). It has not shown the Feeder starting from it, or the leg switching on through a real supply disconnect.
-3. **The real disconnect was never done on the bench** ([#12](https://github.com/luizvilla/TWIST/issues/12)). Every H1 test kept the supply connected, which is a worse case for the supply but not the same event. H5 (the spike) is untested for the same reason.
+1. **Why the high side? Closed** ([#11](https://github.com/luizvilla/TWIST/issues/11), sessions `bench_2026-11-23_173944` and `bench_2026-11-24_174700`, test L2-OV-03). In boost from LOW1 = 12 V, Q201 blocks VHigh **73 %** of each period and Q202 27 %. In peak detect over the whole rise, neither exceeds the bus: Q201 45.0 V, Q202 43.3 V at the 45 V stop. The high side dies first because the small duty makes it hold the overvoltage most of the time, not because of a high-side spike. Body-diode recovery was not isolated, but no overshoot shows at these currents. **Consequence:** a VHigh-level protection covers both devices, and nothing high-side-specific is needed.
+2. **The board keeps switching without its supply. Closed** ([#12](https://github.com/luizvilla/TWIST/issues/12), test L2-DIS-01). With USB unplugged, the VHigh supply off and LOW1 at 12 V, the board stays powered from LOW1. At 0.5 A into VHigh, opening the VHigh supply lead left the current at its reference (−0.50 A), with no trip, while VHigh fell from 31.2 to 20.4 V, the bleed's level (model: about 23 V).
+3. **The real disconnect. Closed at bench current** (#12). The pull-out itself showed no spike in peak detect: VHigh only fell. That is evidence against H5 at a small cable current, not a proof at field currents.
 4. **Magnitudes at field power come from the model only.** The bench ran at 30 V and 20 W; the field ran at 100 V and hundreds of watts. The bench agrees with the model within 5 to 7 % at low power, but the model has no losses, no saturation and no switching detail.
 5. **The LOW1 tank depends on C203.** If C203 is not connected on the bench board (#1), the calibration describes a board state the field boards did not have, and the 48 A field prediction changes.
 6. **Sensor accuracy.** V1_LOW reads +4 % on the bench board (#2), and the mean I1_LOW reading in the current loop differed from its reference by +8 to +18 % in session 2 but by −6 to 0 % in session 7. These do not affect the H1 conclusion, which rests on VHigh and the bleed current, but they affect any protection based on these sensors.
@@ -112,6 +107,9 @@ These are the places where the reasoning is not closed yet.
 2. **Every rail needs its own overvoltage limit**, not only VHigh: the bench firmware's runaway shows the same mechanism on LOW1.
 3. **Duty steps need a slew limit or a cycle-by-cycle current limit.** The overshoot is real, and its lethality is pending #5.
 4. **The drain-to-gate active clamp is rejected.** A TVS sized for the inductor energy only can back up the trip, but not replace it.
-5. **Before the architecture is fixed (#6),** missing links 1 and 2 are worth closing. Both are cheap bench tests with the current rig:
-   - which MOSFET sees the overvoltage first, measured with Vds on Q201 and Q202 during L2-OV-02;
-   - whether the board keeps switching through a real VHigh disconnect while LOW1 stays powered.
+5. **The diagnosis is closed for the protection design.**
+   - The high side holds the bus about three-quarters of the time, so it is the one exposed.
+   - The board runs on through a real VHigh disconnect.
+   - No pull-out spike shows at bench current.
+
+   What remains open (FF2, FF5, H4, field-power magnitudes, C203 and the sensor accuracy) does not change the protections in points 1 to 4.
