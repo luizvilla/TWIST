@@ -2,15 +2,26 @@
 
 These sessions confirm on a real TWIST what the model predicts (finding F-1, and finding F-2 at low energy). They run before any protection is built. Every bench number is compared with the model prediction of the same setup: cases D-L2P-01..06 in [`../model/catalogue.json`](../model/catalogue.json).
 
-Run a session:
+Run a session with the **bench app**, a local web page in the style of the micro-inverter bench app (Core2 branch `apf_quadrature`, `tests/l2/app.py`):
 
 ```bash
 cd simulation/vhigh_overvoltage/bench
-./bench_wizard.sh                                    # a new session in ../results/bench_<date>_<time>/
-SESSION=../results/bench_<...> ./bench_wizard.sh     # resume one (values already entered are offered again)
+~/code/Core2/.venv/bin/python app.py            # reopens the newest unfinished session, or starts one
+~/code/Core2/.venv/bin/python app.py --new      # a new session in ../results/bench_<date>_<time>/
 ```
 
-The wizard walks through 12 stages, asks before every power-on and every step, and finishes by writing the session's `report.html` and refreshing [`../results/control-center.html`](../results/control-center.html) (Bench tab).
+The page opens at `http://127.0.0.1:8770/` and listens on this computer only, because it can drive the board.
+
+- **One tab per test:**
+  - Setup and sensors (L2-SEN-01);
+  - L2-OV-01, L2-OV-02 and L2-STP-01;
+  - L2-OV-03 (#11, which MOSFET takes the overvoltage);
+  - L2-DIS-01 (#12, real disconnect).
+- **One button per phase,** in order. A phase marks itself done (✓) or failed (✗, with the reason). Running one out of order asks first. Phases that start the leg or step the current ask for confirmation. Operator checks take an answer.
+- **The header** shows the board's live readings (VHigh, LOW1, I1, duty, mode, guard) every second, and a **STOP** button that turns the leg off at any time.
+- **Every phase regenerates** the session's `report.html` and the control center. The page links to both, and shows the MSO54 screenshots of the test.
+
+The MSO54 is armed by the app for each capture: single sequence, edge trigger, channels set from the roles given in Setup. The bench wizard (`bench_wizard.sh`) is replaced by the app (it is in the git history).
 
 ## Code
 
@@ -19,7 +30,7 @@ The wizard walks through 12 stages, asks before every power-on and every step, a
 | Firmware | `~/code/examples`, branch `vhigh-investigation`, `TWIST/DC_DC/vhigh_investigation/` | Same structure as `buck_voltage_mode` on `ownstudio/buck-extras` (ThingSet on the second USB serial port, firmware scope, build identity). Leg 1 only. |
 | Core | `~/code/Core` `main`, as a worktree in `~/code/Core-vhigh` | Keeps the working Core checkout untouched. The Core2 safety API is not used: it is experimental. |
 | Bench helper | [`bench_ctl.py`](bench_ctl.py) | ThingSet client (Core2 `tests/common/spoc/thingset.py`), MSO54 (Core2 `tests/common/scope.py`), record and report. Run with `~/code/Core2/.venv/bin/python`. |
-| Wizard | [`bench_wizard.sh`](bench_wizard.sh) | Generated with the `/wizard` skill; the library above the STAGES marker is the skill's template. |
+| Bench app | [`app.py`](app.py), [`web/index.html`](web/index.html) | Tests, phases and their actions are defined once in `app.py` (`TESTS`); the page is built from them. Same session files as `bench_ctl.py`. |
 
 Firmware commands, over ThingSet (`Converter/...`):
 
@@ -28,7 +39,7 @@ Firmware commands, over ThingSet (`Converter/...`):
 | `Mode` | 0 idle, 1 CURRENT (average-current loop on I1_LOW, feedforward V1/VHigh plus a PI at about 300 Hz), 2 STEP (open-loop duty) |
 | `wCurrentRef_A` | Current reference; negative pushes power from LOW1 into VHigh. Ramped at 2 A/s (`rCurrentApplied_A`). |
 | `wDuty0`, `wDuty1`, `wStep` | STEP mode: duty_0, or duty_1 while `wStep` = 1 |
-| `wOvLimit_V`, `wILimit_A`, `wV1LowLimit_V` | Bench guard: the leg opens and stays off when VHigh, \|I1_LOW\| or LOW1 exceed them (checked every 100 us). The wizard sets 45 V, 2.5 A, 20 V. |
+| `wOvLimit_V`, `wILimit_A`, `wV1LowLimit_V` | Bench guard: the leg opens and stays off when VHigh, \|I1_LOW\| or LOW1 exceed them (checked every 100 us). The app sets 45 V, 4 A, 20 V for the VHigh tests, and 40 V, 6.5 A, 20 V for the duty step. |
 | `rTripped`, `rTripReason`, `rTripValue`, `wClear` | Guard state; `wClear` = 1 clears a trip in idle |
 | `Scope/...` | Firmware scope (100 us per sample, 1024 samples): armed by `wArm`, triggered by a change of `Mode`, `wStep` or a guard trip |
 

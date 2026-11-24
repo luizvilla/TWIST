@@ -9,4 +9,4 @@
 @@	L2-OV-02.a	FAIL	The bench guard stops the leg on V_HIGH at its 45 V limit	43 to 47 V, reason V_HIGH	-2.51 V, "|I1_LOW| above wILimit_A"
 @@	L2-OV-02.b	PASS	After the stop VHigh falls back to the supply through the bleed	< 34 V	31.17 V
 @@	L2-OV-02.c	INFO	VHigh rise seen by the firmware scope		30.8 to 36.9 V over 102 ms
-@@	L2-STP-01.a	INFO	Peak I1_LOW after the 0.4 to 0.5 step, firmware scope only (100 us per sample: the 280 us ringing is undersampled, so the true peak is higher). Redo with the MSO54 for a verdict	model 5.17 A	2.49 A seen at 100 us
+@@	L2-STP-01.a	INFO	Peak I1_LOW after the 0.4 to 0.5 step, firmware scope only (100 us per sample: the 280 us ringing is undersampled, so the true peak is higher). Redo with the MSO54 for a verdict	model 3.43 A	2.49 A seen at 100 us

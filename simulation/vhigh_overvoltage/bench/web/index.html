@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VHigh bench</title>
+<style>
+:root{--bg:#fcfcfb;--panel:#fff;--soft:#f4f3ef;--ink:#0b0b0b;--ink2:#52514e;--line:#e4e2dc;--accent:#2a78d6;--good:#008300;--bad:#d03b3a;--warn:#b07800}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161615;--panel:#1e1e1c;--soft:#262624;--ink:#f1f0ec;--ink2:#b5b3ad;--line:#34332f;--accent:#6aa7ee;--good:#3fb950;--bad:#f0605f;--warn:#e0a521}}
+:root[data-theme="dark"]{--bg:#161615;--panel:#1e1e1c;--soft:#262624;--ink:#f1f0ec;--ink2:#b5b3ad;--line:#34332f;--accent:#6aa7ee;--good:#3fb950;--bad:#f0605f;--warn:#e0a521}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,sans-serif;margin:0}
+header{position:sticky;top:0;z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+h1{font-size:18px;margin:0}.sub{color:var(--ink2);font-size:13px}
+.live{display:flex;flex-wrap:wrap;gap:6px 14px;font-variant-numeric:tabular-nums;font-size:14px}
+.live b{font-weight:600}.live .trip{color:var(--bad);font-weight:700}
+.spacer{flex:1}
+button{font:inherit;padding:6px 12px;border:1px solid var(--line);border-radius:6px;background:var(--soft);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--accent)}button:disabled{opacity:.45;cursor:default}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+button.stop{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700;padding:8px 18px}
+nav.tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:2px solid var(--line);padding:0 16px;background:var(--panel)}
+nav.tabs button{background:none;border:0;border-bottom:3px solid transparent;border-radius:0;margin-bottom:-2px;color:var(--ink2);padding:8px 12px}
+nav.tabs button.sel{color:var(--ink);border-bottom-color:var(--accent);font-weight:600}
+nav.tabs .n{font-size:12px;margin-left:6px}
+main{display:grid;grid-template-columns:300px 1fr;gap:16px;padding:16px;max-width:1300px;margin:auto}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.phases{display:flex;flex-direction:column;gap:6px}
+.phase{display:grid;grid-template-columns:28px 1fr;align-items:center;text-align:left;padding:8px 10px;gap:6px}
+.phase .st{font-size:16px;text-align:center}.phase.sel{outline:2px solid var(--accent)}
+.phase.done .st{color:var(--good)}.phase.failed .st{color:var(--bad)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 6px}.card h3{font-size:13px;margin:0 0 6px;color:var(--ink2);text-transform:uppercase;letter-spacing:.04em}
+label{display:grid;grid-template-columns:minmax(160px,40%) 1fr;gap:8px;align-items:center;margin:4px 0;font-size:14px}
+input,select,textarea{font:inherit;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);width:100%}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.out{font-family:ui-monospace,monospace;font-size:12.5px;white-space:pre-wrap;background:var(--soft);border-radius:6px;padding:8px;margin-top:8px}
+.out.err{color:var(--bad)}
+table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}th{color:var(--ink2)}
+.badge{display:inline-block;padding:0 8px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid var(--line);white-space:nowrap}
+.PASS{color:var(--good)}.FAIL{background:var(--bad);color:#fff;border-color:var(--bad)}.INFO{color:var(--ink2)}
+.caps{display:flex;flex-wrap:wrap;gap:8px}.caps a{display:block;width:210px;font-size:12px;color:var(--ink2);text-decoration:none}
+.caps img{width:100%;border:1px solid var(--line);border-radius:4px}
+.log{max-height:220px;overflow:auto}
+a{color:var(--accent)}
+</style></head>
+<body>
+<header>
+  <h1>VHigh bench</h1><span class="sub" id="sess"></span>
+  <div class="live" id="live"></div>
+  <span class="spacer"></span>
+  <a href="/results/control-center.html#bench" target="_blank">Control center</a>
+  <a id="report" href="#" target="_blank">Session report</a>
+  <button onclick="post('/api/record',{})">Record</button>
+  <button class="stop" onclick="post('/api/stop',{})" title="Leg off now: Mode 0, reference 0, step 0">STOP</button>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<main>
+  <div><div class="phases" id="phases"></div>
+    <div class="card" style="margin-top:14px"><h3>Session</h3><div class="sub" id="envsum"></div>
+      <div class="row"><input id="note" placeholder="note (what you saw, a surprise)"><button onclick="note()">Add</button></div>
+      <div class="row"><button onclick="if(confirm('End this session (it stays in the control center)?'))post('/api/end',{})">End session</button>
+        <button onclick="if(confirm('Start a new session folder?'))post('/api/new',{})">New session</button></div></div>
+  </div>
+  <div id="detail"></div>
+</main>
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S=null, tab=localStorage.getItem('vh_tab')||'setup', sel={};
+async function post(url,body){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json();if(j.error)alert(j.error);await refresh();return j}
+function num(v,d=2){const x=parseFloat(v);return Number.isFinite(x)?x.toFixed(d):'—'}
+function phaseState(t,p){return ((S.phases[t]||{})[p]||{})}
+function renderTop(){
+  $('#sess').textContent=S.session+(S.connected?` · board ${S.port}`:' · no board');
+  $('#report').href=`/results/${S.session}/report.html`;
+  const L=S.live||{};const trip=String(L.tripped).toLowerCase()==='true';
+  $('#live').innerHTML=S.connected&&L.VHigh!==undefined?
+    `<span>VHigh <b>${num(L.VHigh)}</b> V</span><span>LOW1 <b>${num(L.V1Low)}</b> V</span><span>I1 <b>${num(L.I1Low,3)}</b> A</span>
+     <span>duty <b>${num(L.duty,3)}</b></span><span>mode <b>${['idle','CURRENT','STEP'][L.Mode]??L.Mode}</b></span><span>ref <b>${num(L.ref,2)}</b> A</span>
+     ${trip?`<span class="trip">TRIPPED: ${esc(L.reason)}</span>`:'<span>guard ok</span>'}${S.live_age>3?` <span class="sub">(${S.live_age}s old)</span>`:''}`
+    :`<span class="sub">${S.connected?'reading…':'no board: Setup → Find the board'}</span>`;
+  $('#tabs').innerHTML=S.tests.map(t=>{const ph=t.phases.length,dn=t.phases.filter(p=>phaseState(t.id,p.id).state==='done').length;
+    return `<button class="${t.id===tab?'sel':''}" onclick="tab='${t.id}';localStorage.setItem('vh_tab',tab);render()">${esc(t.title)}<span class="n sub">${dn}/${ph}</span></button>`}).join('');
+  const e=S.env;$('#envsum').innerHTML=`${esc(e.OPERATOR||'')} · board ${esc(e.BOARD_ID||'?')} · VHigh ${esc(e.VHIGH_PSU_V||'?')} V · LOW1 ${esc(e.VLOW_PSU_V||'?')} V · bleed ${esc(e.R_BLEED_OHM||'?')} Ω · MSO54 ${esc(e.USE_MSO||'?')}<br>channels: LOW1 ${esc(e.CH_VLOW||'-')}, VHigh ${esc(e.CH_VHIGH||'-')}, bleed ${esc(e.CH_IBLEED||'-')}, TP203 ${esc(e.IL_CHANNEL||'-')}, SW ${esc(e.CH_SW||'-')}`;
+}
+function render(){
+  if(!S)return;renderTop();
+  const t=S.tests.find(x=>x.id===tab)||S.tests[0];
+  const ps=t.phases;let cur=sel[t.id];
+  if(!cur||!ps.find(p=>p.id===cur)){const nxt=ps.find(p=>phaseState(t.id,p.id).state!=='done');cur=(nxt||ps[ps.length-1]).id}
+  sel[t.id]=cur;
+  $('#phases').innerHTML=`<div class="sub" style="margin-bottom:4px">${esc(t.test)} · phases in order</div>`+ps.map((p,i)=>{const st=phaseState(t.id,p.id).state;
+    return `<button class="phase ${st||''} ${p.id===cur?'sel':''}" onclick="sel['${t.id}']='${p.id}';render()"><span class="st">${st==='done'?'✓':st==='failed'?'✗':i+1}</span><span>${esc(p.label)}</span></button>`}).join('');
+  const p=ps.find(x=>x.id===cur), idx=ps.indexOf(p), st=phaseState(t.id,p.id);
+  const before=ps.slice(0,idx).filter(x=>phaseState(t.id,x.id).state!=='done');
+  const inputs=(p.inputs||[]).map(([k,l,d])=>`<label>${esc(l)}<input data-k="${k}" value="${esc(S.env[k]??d)}"></label>`).join('');
+  const answer=p.answer?`<label>Answer<select id="ans"><option value="">—</option><option>yes</option><option>no</option><option>unclear</option></select></label><label>What you saw<input id="anstext"></label>`:'';
+  const busy=S.job.busy;
+  const rows=S.rows.filter(r=>r.id.startsWith(t.test));
+  const caps=S.captures.filter(c=>capFor(t.id,c));
+  $('#detail').innerHTML=`<div class="card"><h2>${esc(t.title)}</h2><div class="sub">${esc(t.purpose)}</div></div>
+   <div class="card"><h3>Phase ${idx+1} · ${esc(p.label)}</h3><div>${esc(p.text)}</div>${inputs}${answer}
+    ${before.length?`<div class="sub" style="margin-top:6px">Not done yet before this one: ${before.map(x=>esc(x.label)).join(', ')}</div>`:''}
+    <div class="row"><button class="primary" ${busy?'disabled':''} onclick="go('${t.id}','${p.id}')">${p.kind==='check'?'Confirm':'Run'}</button>
+      ${busy?`<span class="sub">running: ${esc(S.job.label)}…</span>`:''}</div>
+    ${st.text?`<div class="out ${st.state==='failed'?'err':''}">${esc(st.time)}  ${esc(st.text)}</div>`:''}
+    ${!busy&&S.job.error&&S.job.label.startsWith(t.test)&&S.job.error!==st.text?`<div class="out err">${esc(S.job.error)}</div>`:''}</div>
+   <div class="card"><h3>Results ${esc(t.test)}</h3>${rows.length?`<table><tr><th>Criterion</th><th>Verdict</th><th>Limit</th><th>Measured</th></tr>${rows.map(r=>`<tr><td>${esc(r.id)}<div class="sub">${esc(r.desc)}</div></td><td><span class="badge ${r.verdict}">${r.verdict}</span></td><td>${esc(r.limit)}</td><td>${esc(r.measured)}</td></tr>`).join('')}</table>`:'<div class="sub">nothing recorded yet</div>'}</div>
+   ${caps.length?`<div class="card"><h3>MSO54 captures</h3><div class="caps">${caps.map(c=>`<a href="/results/${S.session}/${c}/screen.png" target="_blank"><img src="/results/${S.session}/${c}/screen.png?${Date.now()>>14}" alt="">${esc(c)}</a>`).join('')}</div></div>`:''}
+   <div class="card"><h3>Log</h3><div class="out log" id="log">${esc(S.log.join('\n'))}</div></div>`;
+  const lg=$('#log');if(lg)lg.scrollTop=lg.scrollHeight;
+}
+function capFor(tid,c){const n=c.split('/').pop();return {setup:['scope_check'],ov01:['ov01_1.50A'],ov02:['ov02'],ov03:['ov03_fast','ov03_long'],dis01:['dis01'],stp01:['stp01']}[tid]?.includes(n)}
+async function go(tid,pid){
+  const t=S.tests.find(x=>x.id===tid),p=t.phases.find(x=>x.id===pid);
+  const idx=t.phases.indexOf(p),before=t.phases.slice(0,idx).filter(x=>phaseState(tid,x.id).state!=='done');
+  if(before.length&&!confirm(`Not done yet: ${before.map(x=>x.label).join(', ')}. Run this phase anyway?`))return;
+  if(p.confirm&&!confirm(p.confirm))return;
+  const inputs={};document.querySelectorAll('[data-k]').forEach(i=>inputs[i.dataset.k]=i.value);
+  let answer=null;if(p.answer){answer={answer:$('#ans').value,text:$('#anstext').value};if(!answer.answer){alert('Choose an answer');return}}
+  await post('/api/phase',{test:tid,phase:pid,inputs,answer});
+}
+async function note(){const v=$('#note').value.trim();if(v){await post('/api/note',{text:v});$('#note').value=''}}
+let typing=false;document.addEventListener('focusin',e=>typing=['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName));document.addEventListener('focusout',()=>typing=false);
+async function refresh(){try{S=await (await fetch('/api/state')).json();if(typing)renderTop();else render()}catch(e){}}
+refresh();setInterval(refresh,1000);
+</script>
+</body></html>

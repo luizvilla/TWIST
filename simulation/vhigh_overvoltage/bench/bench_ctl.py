@@ -133,50 +133,50 @@ def save_step(session: str | None, name: str, data: dict) -> None:
     (p / f'{name}.json').write_text(json.dumps(data, indent=1))
 
 
-def cmd_settle(a) -> None:
-    ts = shell(a.port)
-    time.sleep(a.seconds)
+class BenchError(RuntimeError):
+    """@brief A bench action that could not complete (the app shows it; the command line exits with it)."""
+
+
+def settle(ts, name: str, session: str | None, seconds: float = 2.0, n: int = 10, expect=None) -> dict:
+    """@brief Wait, average n readings, store steps/<name>.json. @return the stored record."""
+    time.sleep(seconds)
     reads = []
-    for _ in range(a.n):
+    for _ in range(n):
         reads.append(read_all(ts))
         time.sleep(0.1)
     num = {k: statistics.fmean(float(r[k]) for r in reads) for k in ('rVHigh_V', 'rV1Low_V', 'rI1Low_A', 'rDuty')}
     num.update({k + '_sd': statistics.pstdev(float(r[k]) for r in reads) for k in ('rVHigh_V', 'rI1Low_A')})
-    out = {'name': a.name, 'time': dt.datetime.now().isoformat(timespec='seconds'), 'mean': num, 'last': reads[-1],
-           'expect': json.loads(a.expect) if a.expect else None}
-    save_step(a.session, a.name, out)
-    print(json.dumps({'VHigh_V': round(num['rVHigh_V'], 2), 'I1Low_A': round(num['rI1Low_A'], 3),
-                      'V1Low_V': round(num['rV1Low_V'], 2), 'duty': round(num['rDuty'], 4),
-                      'tripped': reads[-1]['rTripped'], 'reason': reads[-1]['rTripReason']}))
+    out = {'name': name, 'time': dt.datetime.now().isoformat(timespec='seconds'), 'mean': num, 'last': reads[-1],
+           'expect': expect}
+    save_step(session, name, out)
+    return out
 
 
-def cmd_wait_trip(a) -> None:
-    ts = shell(a.port)
+def settle_summary(out: dict) -> dict:
+    num, last = out['mean'], out['last']
+    return {'VHigh_V': round(num['rVHigh_V'], 2), 'I1Low_A': round(num['rI1Low_A'], 3), 'V1Low_V': round(num['rV1Low_V'], 2),
+            'duty': round(num['rDuty'], 4), 'tripped': last['rTripped'], 'reason': last['rTripReason']}
+
+
+def wait_trip(ts, session: str | None, name: str, timeout: float = 5.0) -> dict | None:
+    """@brief Poll until the bench guard trips. @return the readings at the trip (stored), or None on timeout."""
     t0 = time.time()
-    while time.time() - t0 < a.timeout:
+    while time.time() - t0 < timeout:
         if str(get(ts, 'Converter/rTripped')).lower() in ('true', '1'):
             d = read_all(ts)
             d['seconds_waited'] = round(time.time() - t0, 2)
-            save_step(a.session, a.name, {'name': a.name, 'trip': d})
-            print(json.dumps({'tripped': True, 'reason': d['rTripReason'], 'value': d['rTripValue'],
-                              'VHigh_now': d['rVHigh_V']}))
-            return
+            save_step(session, name, {'name': name, 'trip': d})
+            return d
         time.sleep(0.05)
-    print(json.dumps({'tripped': False}))
-    raise SystemExit(2)
+    return None
 
 
-def cmd_fwscope_arm(a) -> None:
-    put(shell(a.port), 'Scope/wArm', 1)
-    print('armed')
-
-
-def cmd_fwscope_read(a) -> None:
-    ts = shell(a.port)
+def fwscope_read(ts, session: str, name: str, timeout: float = 5.0) -> str:
+    """@brief Read the firmware scope once it holds a capture; store fwscope/<name>.json. @return a summary line."""
     t0 = time.time()
     while str(get(ts, 'Scope/rState')) != '3':
-        if time.time() - t0 > a.timeout:
-            raise SystemExit('firmware scope not ready (rState != 3)')
+        if time.time() - t0 > timeout:
+            raise BenchError('firmware scope not ready (rState != 3)')
         time.sleep(0.1)
     length = int(get(ts, 'Scope/rLength'))
     period = float(get(ts, 'Scope/rPeriod_s'))
@@ -189,10 +189,35 @@ def cmd_fwscope_read(a) -> None:
         vals += json.loads(v) if isinstance(v, str) else v
     vals = vals[:length * len(names)]
     data = {'period_s': period, 'pretrigger': pre, 'channels': {n: vals[i * length:(i + 1) * length] for i, n in enumerate(names)}}
-    p = Path(a.session) / 'fwscope'
+    p = Path(session) / 'fwscope'
     p.mkdir(parents=True, exist_ok=True)
-    (p / f'{a.name}.json').write_text(json.dumps(data))
-    print(f'{len(names)} channels x {length} samples -> {p / (a.name + ".json")}')
+    (p / f'{name}.json').write_text(json.dumps(data))
+    return f'{len(names)} channels x {length} samples -> fwscope/{name}.json'
+
+
+def cmd_settle(a) -> None:
+    print(json.dumps(settle_summary(settle(shell(a.port), a.name, a.session, a.seconds, a.n,
+                                           json.loads(a.expect) if a.expect else None))))
+
+
+def cmd_wait_trip(a) -> None:
+    d = wait_trip(shell(a.port), a.session, a.name, a.timeout)
+    if d is None:
+        print(json.dumps({'tripped': False}))
+        raise SystemExit(2)
+    print(json.dumps({'tripped': True, 'reason': d['rTripReason'], 'value': d['rTripValue'], 'VHigh_now': d['rVHigh_V']}))
+
+
+def cmd_fwscope_arm(a) -> None:
+    put(shell(a.port), 'Scope/wArm', 1)
+    print('armed')
+
+
+def cmd_fwscope_read(a) -> None:
+    try:
+        print(fwscope_read(shell(a.port), a.session, a.name, a.timeout))
+    except BenchError as ex:
+        raise SystemExit(str(ex))
 
 
 # ---------------------------------------------------------------- MSO54
@@ -204,13 +229,18 @@ TEK_RESOURCE = 'USB0::1689::1314::C017217::0::INSTR'
 PRESETS = {  # role: (scale per div, centre offset), plus the timebase
     'ov':  {'vhigh': (5.0, 37.0), 'vlow': (5.0, 12.0), 'il': (0.2, 1.0), 'ibleed': (0.1, 0.35), 'hscale': 0.05, 'hpos': 30.0},
     'stp': {'vhigh': (2.0, 30.0), 'vlow': (2.0, 13.0), 'il': (0.1, 1.3), 'ibleed': (0.05, 0.30), 'hscale': 2e-4, 'hpos': 20.0},
+    # L2-OV-03 (#11): the switch node instead of TP203; Vds(Q202) = SW, Vds(Q201) = VHigh - SW
+    'sw':  {'vhigh': (5.0, 37.0), 'vlow': (5.0, 12.0), 'sw': (10.0, 20.0), 'ibleed': (0.1, 0.35), 'hscale': 1e-6, 'hpos': 50.0},
+    # L2-DIS-01 (#12): VHigh falls from the supply to the bleed's level when the supply lead is opened
+    'dis': {'vhigh': (2.0, 27.0), 'vlow': (2.0, 12.0), 'il': (0.2, 1.0), 'sw': (10.0, 20.0), 'ibleed': (0.05, 0.28),
+            'hscale': 0.04, 'hpos': 30.0},
 }
 
 
 def roles(session: str | None) -> dict:
     env = parse_env(Path(session) / 'session.env') if session else {}
     r = {'vhigh': env.get('CH_VHIGH', 'CH2'), 'vlow': env.get('CH_VLOW', 'CH1'), 'il': env.get('IL_CHANNEL', 'CH4'),
-         'ibleed': env.get('CH_IBLEED', 'CH3')}
+         'ibleed': env.get('CH_IBLEED', 'CH3'), 'sw': env.get('CH_SW', 'none')}
     return {k: v for k, v in r.items() if v and v != 'none'}
 
 
@@ -251,18 +281,23 @@ def scope_errors(sc) -> str:
     return '' if ev.startswith('0,') or 'No events' in ev else ev
 
 
-def cmd_mso_check(a) -> None:
-    sc = tek_open(a.resource)
-    print(sc.q('*IDN?'), '| acquisition', 'running' if sc.running() else 'stopped', '| trigger', sc.q('TRIGger:A:MODe?'))
+def mso_check(resource: str | None = None) -> str:
+    sc = tek_open(resource)
+    return f'{sc.q("*IDN?")} | acquisition {"running" if sc.running() else "stopped"} | trigger {sc.q("TRIGger:A:MODe?")}'
 
 
-def cmd_mso_arm(a) -> None:
-    sc = tek_open(a.resource)
-    p = PRESETS[a.preset]
-    r = roles(a.session)
+def mso_arm(session: str | None, preset: str = 'ov', auto: bool = False, source: str = 'vhigh', level: float = 0.0,
+            slope: str = 'RISe', hscale: float | None = None, hpos: float | None = None, peak: bool = False,
+            resource: str | None = None) -> str:
+    """@brief Set the channels of the session's roles, the timebase and an edge trigger (or auto); arm a single sequence."""
+    sc = tek_open(resource)
+    p = PRESETS[preset]
+    r = roles(session)
     sc.inst.write('ACQuire:STATE STOP')
     sc.q('*OPC?', timeout_s=10)
     for role, ch in r.items():
+        if role not in p:
+            continue
         scale, offset = p[role]
         sc.inst.write(f'DISplay:GLObal:{ch}:STATE ON')
         sc.inst.write(f'{ch}:POSition 0')
@@ -270,52 +305,83 @@ def cmd_mso_arm(a) -> None:
         sc.inst.write(f'{ch}:OFFSet {offset}')
     sc.inst.write('HORizontal:DELay:MODe OFF')  # a delay left on from earlier settings moves the window away from the trigger
     sc.inst.write('HORizontal:MODe AUTO')
-    sc.inst.write(f'HORizontal:SCAle {a.hscale if a.hscale else p["hscale"]}')
-    sc.inst.write(f'HORizontal:POSition {a.hpos if a.hpos is not None else p["hpos"]}')
+    sc.inst.write(f'HORizontal:SCAle {hscale if hscale else p["hscale"]}')
+    sc.inst.write(f'HORizontal:POSition {hpos if hpos is not None else p["hpos"]}')
     sc.inst.write('HORizontal:RECOrdlength 125000')
     sc.inst.write('HORizontal:MODe:RECOrdlength 125000')  # the form the MSO5 series takes in AUTO mode
-    if a.auto:
+    sc.inst.write(f'ACQuire:MODe {"PEAKdetect" if peak else "SAMple"}')
+    if auto:
         sc.inst.write('TRIGger:A:MODe AUTO')
     else:
-        src = r[a.source]
+        if source not in r:
+            raise BenchError(f'no scope channel has the role {source!r} in this session (Setup tab)')
+        src = r[source]
         sc.inst.write('TRIGger:A:TYPe EDGE')
         sc.inst.write(f'TRIGger:A:EDGE:SOUrce {src}')
-        sc.inst.write(f'TRIGger:A:EDGE:SLOpe {a.slope}')
-        sc.inst.write(f'TRIGger:A:LEVel:{src} {a.level}')
+        sc.inst.write(f'TRIGger:A:EDGE:SLOpe {slope}')
+        sc.inst.write(f'TRIGger:A:LEVel:{src} {level}')
         sc.inst.write('TRIGger:A:MODe NORMal')
     sc.q('*OPC?', timeout_s=10)
     err = scope_errors(sc)
     sc.arm_single()
     time.sleep(0.3)
     state = sc.q('TRIGger:STATE?', timeout_s=3)
-    what = 'auto trigger' if a.auto else f'{a.source} ({r[a.source]}) {a.slope} at {a.level}'
-    print(f'MSO54 armed, single sequence, {what}; {sc.num("HORizontal:SCAle?")} s/div, '
-          f'{sc.num("HORizontal:RECOrdlength?")} points; trigger state {state}' + (f'; scope errors: {err}' if err else ''))
+    what = 'auto trigger' if auto else f'{source} ({r[source]}) {slope} at {level:g}'
+    return (f'MSO54 armed, single sequence, {what}; {sc.num("HORizontal:SCAle?")} s/div, '
+            f'{sc.num("HORizontal:RECOrdlength?")} points, {"peak detect" if peak else "sample"}; trigger state {state}'
+            + (f'; scope errors: {err}' if err else ''))
+
+
+def mso_wait(timeout: float = 10.0, resource: str | None = None) -> bool:
+    """@return True once the single acquisition has triggered and stopped."""
+    sc = tek_open(resource)
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        if sc.q('ACQuire:STATE?', timeout_s=3) in ('0', 'OFF', 'STOP'):
+            return True
+        time.sleep(0.2)
+    return False
+
+
+def mso_capture(session: str, name: str, resource: str | None = None) -> str:
+    """@brief Read the held acquisition into scope/<name>/ (screen, measurements, waveforms)."""
+    import scope as tek
+    out = Path(session) / 'scope' / name
+    try:
+        sc = tek_open(resource)
+        note = ' (the scope was still running: it did not trigger)' if sc.running() else ''
+        tek.capture(sc, out, label=name, waveforms=True)
+    except SystemExit:
+        raise
+    except Exception as ex:  # a USB timeout from pyvisa-py is a ValueError, not a VisaIOError
+        raise BenchError(f'MSO54 capture failed: {type(ex).__name__}: {ex}')
+    return f'scope/{name}/{note}'
+
+
+def cmd_mso_check(a) -> None:
+    print(mso_check(a.resource))
+
+
+def cmd_mso_arm(a) -> None:
+    try:
+        print(mso_arm(a.session, a.preset, a.auto, a.source, a.level, a.slope, a.hscale, a.hpos, a.peak, a.resource))
+    except BenchError as ex:
+        raise SystemExit(str(ex))
 
 
 def cmd_mso_wait(a) -> None:
-    sc = tek_open(a.resource)
-    t0 = time.time()
-    while time.time() - t0 < a.timeout:
-        if sc.q('ACQuire:STATE?', timeout_s=3) in ('0', 'OFF', 'STOP'):
-            print(f'MSO54 triggered and stopped after {time.time() - t0:.1f} s')
-            return
-        time.sleep(0.2)
-    print(f'MSO54 did not trigger within {a.timeout:g} s (trigger state {sc.q("TRIGger:STATE?", timeout_s=3)})')
+    if mso_wait(a.timeout, a.resource):
+        print('MSO54 triggered and stopped')
+        return
+    print(f'MSO54 did not trigger within {a.timeout:g} s')
     raise SystemExit(2)
 
 
 def cmd_mso_capture(a) -> None:
-    import scope as tek
-    out = Path(a.session) / 'scope' / a.name
     try:
-        sc = tek_open(a.resource)
-        if sc.running():
-            print('warning: the scope is still running (it did not trigger): capturing what it holds now')
-        tek.capture(sc, out, label=a.name, waveforms=True)
-    except Exception as ex:  # a USB timeout from pyvisa-py is a ValueError, not a VisaIOError
-        raise SystemExit(f'MSO54 capture failed: {type(ex).__name__}: {ex}')
-    print(out)
+        print(mso_capture(a.session, a.name, a.resource))
+    except BenchError as ex:
+        raise SystemExit(str(ex))
 
 
 # ---------------------------------------------------------------- predictions and record
@@ -471,6 +537,53 @@ def criteria(session: Path) -> list[dict]:
                 ok = abs(pk - pp) <= 0.3 * pp
                 row('L2-STP-01.a', 'PASS' if ok else 'FAIL', 'Peak inductor current after the 0.4 to 0.5 step, against D-L2P-06',
                     f'{pp:.2f} A +/- 30 %', f'{pk:.2f} A ({(pk - pp) / pp * 100:+.0f} %)')
+    # ---- L2-OV-03 (#11): which MOSFET takes the overvoltage. Vds(Q202) = SW node, Vds(Q201) = VHigh - SW node.
+    import numpy as np
+    for cap, what in (('ov03_fast', 'fast capture as VHigh crossed the trigger'), ('ov03_long', 'peak-detect capture of the whole rise')):
+        f = session / 'scope' / cap / 'waveforms.npz'
+        cs, cv = env.get('CH_SW', 'none'), env.get('CH_VHIGH')
+        if f.exists() and cs != 'none' and cv:
+            w = np.load(f)
+            if f'{cs}_v' in w and f'{cv}_v' in w:
+                sw, vh = w[f'{cs}_v'], w[f'{cv}_v']
+                n = min(len(sw), len(vh)); sw, vh = sw[:n], vh[:n]
+                vlo, vhi = sw, vh - sw
+                half = 0.5 * float(np.median(vh))
+                row(f'L2-OV-03.{"a" if cap == "ov03_fast" else "b"}', 'INFO', f'Peak Vds of each MOSFET, {what}', '',
+                    f'Q201 (high side) {float(vhi.max()):.1f} V, blocking {100 * float((vhi > half).mean()):.0f} % of the time; '
+                    f'Q202 (low side) {float(vlo.max()):.1f} V, blocking {100 * float((vlo > half).mean()):.0f} %; VHigh max {float(vh.max()):.1f} V')
+    if 'ov03_trip' in steps:
+        t = steps['ov03_trip']['trip']
+        row('L2-OV-03.c', 'INFO', 'Guard stop during the L2-OV-03 run', '', f'{float(t["rTripValue"]):.2f} V, "{t["rTripReason"]}"')
+
+    # ---- L2-DIS-01 (#12): does the board keep switching through a real VHigh disconnect?
+    op = json.loads((session / 'operator.json').read_text()) if (session / 'operator.json').exists() else {}
+    if 'dis_selfpower' in op:
+        a = op['dis_selfpower']
+        row('L2-DIS-01.a', 'INFO', 'Board self-powered from LOW1 alone (USB unplugged, VHigh supply off), operator', '',
+            f'{a.get("answer", "")}: {a.get("text", "")}')
+    if 'dis_before' in steps and 'dis_after' in steps:
+        b0, b1 = steps['dis_before']['mean'], steps['dis_after']['mean']
+        ref = float(steps['dis_before']['last'].get('wCurrentRef_A') or -0.5)
+        kept = abs(b1['rI1Low_A'] - ref) < 0.2 and str(steps['dis_after']['last'].get('rTripped')).lower() not in ('true', '1')
+        row('L2-DIS-01.b', 'PASS' if kept else 'FAIL',
+            'H1 assumption: the leg keeps switching (current held at its reference) after the VHigh supply lead is opened', '|I1 - ref| < 0.2 A, no trip',
+            f'I1 {b0["rI1Low_A"]:+.2f} A before, {b1["rI1Low_A"]:+.2f} A after (ref {ref:+.2f}); VHigh {b0["rVHigh_V"]:.2f} -> {b1["rVHigh_V"]:.2f} V')
+    f = session / 'scope' / 'dis01' / 'waveforms.npz'
+    cv = env.get('CH_VHIGH')
+    if f.exists() and cv:
+        w = np.load(f)
+        if f'{cv}_v' in w:
+            t, v = w[f'{cv}_t'], w[f'{cv}_v']
+            pre = v[t < 0]; post = v[t >= 0]
+            if len(pre) and len(post):
+                spike = float(post[: max(1, len(post) // 20)].max() - pre.mean())
+                row('L2-DIS-01.c', 'INFO', 'VHigh at the pull-out (MSO54, peak detect): level before, level after, spike above the level before', '',
+                    f'{float(pre.mean()):.2f} V before, {float(post[-len(post) // 5:].mean()):.2f} V after, spike {spike:+.2f} V')
+    if 'dis_switching' in op:
+        a = op['dis_switching']
+        row('L2-DIS-01.d', 'INFO', 'Leg still switching after the pull-out, operator (scope, sound, readings)', '',
+            f'{a.get("answer", "")}: {a.get("text", "")}')
     return rows
 
 
@@ -596,7 +709,8 @@ def main() -> None:
     s.add_argument('--timeout', type=float, default=5.0)
     sub.add_parser('mso-check')
     s = sub.add_parser('mso-arm'); s.add_argument('--session'); s.add_argument('--preset', choices=list(PRESETS), default='ov')
-    s.add_argument('--auto', action='store_true'); s.add_argument('--source', choices=['vhigh', 'vlow', 'il', 'ibleed'], default='vhigh')
+    s.add_argument('--auto', action='store_true'); s.add_argument('--peak', action='store_true')
+    s.add_argument('--source', choices=['vhigh', 'vlow', 'il', 'ibleed', 'sw'], default='vhigh')
     s.add_argument('--level', type=float, default=0.0); s.add_argument('--slope', default='RISe')
     s.add_argument('--hscale', type=float); s.add_argument('--hpos', type=float)
     s = sub.add_parser('mso-wait'); s.add_argument('--timeout', type=float, default=10.0)

@@ -118,7 +118,7 @@ The 105 V peaks in the safe cases are the 100 V bus plus the 5 V turn-off spike 
 
 ### Bench confirmations (catalogue tab "Bench (L2)"), safest first
 
-All three run in one session through [`bench/bench_wizard.sh`](bench/bench_wizard.sh). The setup, the code and the reasons behind them are in [`bench/README.md`](bench/README.md).
+They run in the bench app ([`bench/app.py`](bench/app.py), one tab per test, one button per phase; it replaced `bench/bench_wizard.sh` on 2026-11-24), together with L2-OV-03 (#11) and L2-DIS-01 (#12). The setup, the code and the reasons behind them are in [`bench/README.md`](bench/README.md).
 
 - **Firmware:** `~/code/examples`, branch `vhigh-investigation`, `TWIST/DC_DC/vhigh_investigation/`, built with Core `main`. The Core2 safety API is not used because it is still experimental.
 - **Bench guard:** the firmware opens the leg at 45 V, 2.5 A, or LOW1 above 20 V. It checks every 100 µs and stays latched.

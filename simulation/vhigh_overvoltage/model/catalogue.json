@@ -566,6 +566,22 @@
       "purpose": "Confirms F-1 on the board without any disconnect. 12 V supply (3 A limit) on LOW1, 100 ohm / 30 W across VHigh, MSO54 on VHigh, V1_low, iL, SW. Pass band: each settled VHigh within the D-L2P-01..04 prediction +/-5 %. Firmware: examples TWIST/DC_DC/vhigh_investigation, CURRENT mode."
     },
     {
+      "id": "L2-OV-03",
+      "tab": "bench",
+      "level": "L2",
+      "status": "implemented",
+      "title": "Which MOSFET takes the overvoltage during the VHigh rise (map #11)",
+      "purpose": "L2-OV-02 repeated with a probe on the switch node: Vds(Q202) = SW, Vds(Q201) = VHigh - SW. A fast capture at 1 us/div as VHigh crosses 43 V, and a peak-detect capture of the whole rise. Looks for why the field failures kill the high side."
+    },
+    {
+      "id": "L2-DIS-01",
+      "tab": "bench",
+      "level": "L2",
+      "status": "implemented",
+      "title": "Real VHigh disconnect: self-powering from LOW1, and the leg switching through the pull-out (map #12)",
+      "purpose": "Checks the H1 assumption that the converter keeps running without its VHigh supply: the board coming up from LOW1 alone (USB unplugged), then the VHigh supply lead opened at 0.5 A into VHigh with the MSO54 in peak detect on VHigh (also the first look at H5, the pull-out spike)."
+    },
+    {
       "id": "L2-STP-01",
       "tab": "bench",
       "level": "L2",
