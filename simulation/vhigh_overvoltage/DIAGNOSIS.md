@@ -92,14 +92,14 @@ The first bench firmware took V1_low live in its current loop's feedforward. Wit
 
 These are the places where the reasoning is not closed yet.
 
-1. **Why the high side?** In H1 the overvoltage appears across whichever MOSFET is off, and Q201 and Q202 block VHigh in turn. Nothing so far explains why the high side dies more often. Candidates, untested:
+1. **Why the high side?** ([#11](https://github.com/luizvilla/TWIST/issues/11)) In H1 the overvoltage appears across whichever MOSFET is off, and Q201 and Q202 block VHigh in turn. Nothing so far explains why the high side dies more often. Candidates, untested:
    - in boost from a low LOW1, the duty is small, so Q201 blocks VHigh for most of the period;
    - Q201's body-diode reverse recovery in the boost direction (there is no Schottky across the high side);
    - the order in which the two devices reach avalanche.
 
    This matters for the protection: a VHigh trip protects both devices, but a high-side-only measure (the clamp, or a snubber on Q201) would not.
-2. **"The board keeps switching" is assumed, not shown in the failure condition.** The bench showed the backfeed (VHigh 11.4 V from LOW1). It has not shown the Feeder starting from it, or the leg switching on through a real supply disconnect.
-3. **The real disconnect was never done on the bench.** Every H1 test kept the supply connected, which is a worse case for the supply but not the same event. H5 (the spike) is untested for the same reason.
+2. **"The board keeps switching" is assumed, not shown in the failure condition** ([#12](https://github.com/luizvilla/TWIST/issues/12)). The bench showed the backfeed (VHigh 11.4 V from LOW1). It has not shown the Feeder starting from it, or the leg switching on through a real supply disconnect.
+3. **The real disconnect was never done on the bench** ([#12](https://github.com/luizvilla/TWIST/issues/12)). Every H1 test kept the supply connected, which is a worse case for the supply but not the same event. H5 (the spike) is untested for the same reason.
 4. **Magnitudes at field power come from the model only.** The bench ran at 30 V and 20 W; the field ran at 100 V and hundreds of watts. The bench agrees with the model within 5 to 7 % at low power, but the model has no losses, no saturation and no switching detail.
 5. **The LOW1 tank depends on C203.** If C203 is not connected on the bench board (#1), the calibration describes a board state the field boards did not have, and the 48 A field prediction changes.
 6. **Sensor accuracy.** V1_LOW reads +4 % on the bench board (#2), and the mean I1_LOW reading in the current loop differed from its reference by +8 to +18 % in session 2 but by −6 to 0 % in session 7. These do not affect the H1 conclusion, which rests on VHigh and the bleed current, but they affect any protection based on these sensors.
